@@ -89,6 +89,24 @@ describe('admin 后台', () => {
     void sub;
   });
 
+  it('管理员 hidden 默认置 1（不上排行榜），可手动取消隐藏后上榜', async () => {
+    // 首个注册管理员与被授予 admin 的用户 hidden 均为 1
+    const users = await api('/users', { token: adminToken });
+    expect(users.json.users.find((x: any) => x.username === 'p4_admin')!.hidden).toBe(true);
+    expect(users.json.users.find((x: any) => x.username === 'p4_subadmin')!.hidden).toBe(true);
+
+    let rank = await api('/rank', { token: adminToken });
+    expect(rank.json.rank.some((x: any) => x.username === 'p4_admin')).toBe(false);
+    expect(rank.json.rank.some((x: any) => x.username === 'p4_subadmin')).toBe(false);
+    expect(rank.json.rank.some((x: any) => x.username === 'p4_player')).toBe(true);
+
+    // 手动取消隐藏 → 上榜
+    await api('/user?username=p4_admin', { method: 'PUT', body: { hidden: false }, token: adminToken });
+    rank = await api('/rank', { token: adminToken });
+    expect(rank.json.rank.some((x: any) => x.username === 'p4_admin')).toBe(true);
+    await api('/user?username=p4_admin', { method: 'PUT', body: { hidden: true }, token: adminToken });
+  });
+
   it('game-config 读写与提交时间窗口', async () => {
     const token = await registerUser('p4_window');
     const put = await api('/game-config', {

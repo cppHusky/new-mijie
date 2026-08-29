@@ -23,10 +23,6 @@
             </div>
             <div class="form-control w-[400px] mb-5">
                 <label class="label cursor-pointer">
-                    <span class="label-text mr-5">显示管理员</span>
-                    <input type="checkbox" class="toggle toggle-sm" v-model="showAdmins" />
-                </label>
-                <label class="label cursor-pointer">
                     <span class="label-text mr-5">展开表格</span>
                     <input type="checkbox" class="toggle toggle-sm" v-model="expand" />
                 </label>
@@ -215,7 +211,6 @@ const remark = ref('')
 const adminToggle = ref(null)
 const search = ref('')
 const expand = ref(false)
-const showAdmins = ref(false)
 function openDrawer(u) {
     drawer.value = true
     u.admin = u.admin || 0
@@ -351,10 +346,8 @@ const size = computed(() => {
     return xsize.value
 })
 const searchedUsers = computed(() => {
-    // 管理员默认隐藏（决策：用户列表中管理员应默认隐藏）
-    let list = showAdmins.value ? users.value : users.value.filter(x => !(x.admin > 0))
-    if (!search.value) return list
-    return list.filter(x => x.username.includes(search.value) || x.qq?.includes(search.value))
+    if (!search.value) return users.value
+    return users.value.filter(x => x.username.includes(search.value) || x.qq?.includes(search.value))
 })
 const totalPages = computed(() => {
     return Math.ceil(searchedUsers.value.length / size.value)

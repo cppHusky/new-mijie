@@ -108,29 +108,22 @@ app.put('/user', async (c) => {
       return c.text('Invalid admin value', 400);
     }
   }
-  const sets: string[] = [];
-  const binds: unknown[] = [];
+  const updates: Record<string, unknown> = {};
   if (admin !== undefined) {
-    sets.push('admin = ?');
-    binds.push(admin);
+    updates.admin = admin;
+    // 管理员 hidden 默认置 1（决策 9）；同一请求显式给出 hidden 时以显式为准
+    if (admin >= 1 && hidden === undefined) updates.hidden = 1;
   }
-  if (banned !== undefined) {
-    sets.push('banned = ?');
-    binds.push(banned ? 1 : 0);
-  }
-  if (hidden !== undefined) {
-    sets.push('hidden = ?');
-    binds.push(hidden ? 1 : 0);
-  }
-  if (remark !== undefined) {
-    sets.push('remark = ?');
-    binds.push(remark);
-  }
+  if (banned !== undefined) updates.banned = banned ? 1 : 0;
+  if (hidden !== undefined) updates.hidden = hidden ? 1 : 0;
+  if (remark !== undefined) updates.remark = remark;
   const uuid = crypto.randomUUID();
-  if (sets.length) {
-    binds.push(username);
-    await c.env.DB.prepare(`UPDATE users SET ${sets.join(', ')} WHERE username = ?`)
-      .bind(...binds)
+  const keys = Object.keys(updates);
+  if (keys.length) {
+    await c.env.DB.prepare(
+      `UPDATE users SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE username = ?`
+    )
+      .bind(...keys.map((k) => updates[k]), username)
       .run();
   }
   if (banned !== undefined || hidden !== undefined) {

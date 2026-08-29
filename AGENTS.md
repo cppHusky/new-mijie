@@ -28,6 +28,7 @@ puzzle-framework 是一个解谜游戏（Puzzle Hunt）框架，灵感与大部�
 | 6 | pid 大小写 | 不强制转换，全链路大小写敏感；构建期对仅大小写不同的 pid 告警 |
 | 7 | label | 新增 `label?: string`，兼任题目列表排序键与幽灵行标识，全行显示 |
 | 8 | noPrize | 不实现；QQ 号仅供管理员在用户列表人工核对 |
+| 9 | 管理员隐藏 | 沿用 mijie `hidden` 机制：排行榜/通过率的排除口径**只看 `hidden`，与 admin 身份无关**；管理员在获得权限时 `hidden` **默认置 1**（首个注册管理员、被授予 admin 时），可在用户列表手动取消 |
 
 ## 领域模型：四个正交维度
 
@@ -438,7 +439,7 @@ type Context = {
 | GET | `/api/submitted_problems` | 各题提交次数（沿袭） |
 | GET | `/api/notice` · `GET /api/hint/:uid` · `GET /api/file/:pid/*` | 沿袭 |
 
-管理员：game-config（无 gameover 字段）、notice 增删、users（默认隐藏管理员、显示 QQ）、user 状态修改、recalculate、cleanRecords、problemList。
+管理员：game-config（无 gameover 字段）、notice 增删、users（显示 QQ）、user 状态修改（admin/banned/hidden/remark；授 admin 时 hidden 默认置 1，决策 9）、recalculate、cleanRecords、problemList。
 
 **删除**：`/start`、`/problemManual`、`/game-config/gameover`、`POST /record/:name`、原 `/problem`（流程图数据源）、Graph/Start/Gameover 三个前端页面。
 

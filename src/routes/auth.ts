@@ -33,12 +33,12 @@ publicRoutes.post('/register', async (c) => {
   }
   const { hash, salt } = await hashPassword(password);
   const count = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM users').first<{ n: number }>();
-  // 首个注册用户自动成为超级管理员（沿用 mijie 约定）
+  // 首个注册用户自动成为超级管理员（沿用 mijie 约定）；管理员 hidden 默认置 1（决策 9）
   const admin = (count?.n ?? 0) === 0 ? 2 : 0;
   await c.env.DB.prepare(
-    'INSERT INTO users (username, password_hash, salt, qq, admin, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    'INSERT INTO users (username, password_hash, salt, qq, admin, hidden, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
   )
-    .bind(username, hash, salt, qq || null, admin, Date.now())
+    .bind(username, hash, salt, qq || null, admin, admin > 0 ? 1 : 0, Date.now())
     .run();
   return c.json({ message: '注册成功' });
 });
