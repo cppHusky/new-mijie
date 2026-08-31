@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "pnpm gen",
     "gen": "node scripts/gen-manifest.mjs",
     "dev": "pnpm gen && wrangler dev",
     "dev:frontend": "pnpm --dir frontend dev",
