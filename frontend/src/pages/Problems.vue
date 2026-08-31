@@ -34,7 +34,7 @@
                 <span :class="{ 'opacity-60': cond.met }">{{ cond.desc }}</span>
               </li>
             </ul>
-            <button class="btn btn-outline btn-sm mt-3" :disabled="!p.canUnlock || unlocking" @click="unlock(p)">
+            <button class="btn btn-outline btn-sm mt-3" :disabled="!p.canUnlock || unlocking !== ''" @click="unlock(p)">
               <span class="loading loading-dots loading-xs" v-if="unlocking === p.pid"></span>
               解锁
             </button>
