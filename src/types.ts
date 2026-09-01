@@ -200,7 +200,7 @@ type AutoPlugin<H> = Plugin<
     : false
 >;
 
-export function createPlugin<
+export default function createPlugin<
   const H extends readonly { name: string; placeholder: string }[] | true | false = true
 >(
   plugin: Omit<AutoPlugin<H>, 'pid'> & {
