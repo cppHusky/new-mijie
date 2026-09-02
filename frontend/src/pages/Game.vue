@@ -107,7 +107,7 @@
                         <div>
                             <h2 class="font-bold">
                                 <font-awesome-icon :icon="['fas', 'circle-xmark']" />
-                                答案错误
+                                未通关
                             </h2>
                             <div class="mt-3" v-if="record.msg?.length">
                                 <pre>{{ record.msg }}</pre>
@@ -118,7 +118,7 @@
                         <div>
                             <h2 class="font-bold">
                                 <font-awesome-icon :icon="['fas', 'circle-check']" />
-                                答案正确！
+                                已通关
                             </h2>
                             <div class="mt-3" v-if="record.msg?.length">
                                 <pre class="break-all">{{ record.msg }}</pre>
