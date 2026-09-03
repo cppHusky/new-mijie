@@ -9,7 +9,7 @@ import {
   hiddenRecord,
   type RegisteredPlugin,
 } from '../plugins/registry';
-import { evalUnlock } from '../domain/unlock';
+import { evalCondition, evalUnlock } from '../domain/unlock';
 import { evalVisibility } from '../domain/visibility';
 import { getGameConfig, checkGameWindow } from '../lib/config';
 import { loadUserState, loadGameStorage, unlockContextOf } from '../lib/state';
@@ -41,12 +41,31 @@ app.get('/problems', async (c) => {
   const now = new Date();
   const tz = tzOf(c.env);
   const base = unlockContextOf(state, now);
+  // 跨题状态集合（unlocked 语义与单题一致：unlock===true 或已持久化解锁）
+  const unlockedPids = new Set<string>();
+  const visitedPids = new Set<string>();
+  for (const p of plugins) {
+    const st = state.states.get(p.pid);
+    if (p.unlock === true || st?.unlocked_at != null) unlockedPids.add(p.pid);
+    if (st?.visited_at != null) visitedPids.add(p.pid);
+  }
   const list = [];
   for (const p of plugins) {
     const st = state.states.get(p.pid);
     const unlocked = p.unlock === true || st?.unlocked_at != null;
     const visited = st?.visited_at != null;
-    const visibility = evalVisibility(p.accessible, { ...base, unlocked, visited });
+    const visibility = evalVisibility(
+      p.accessible,
+      {
+        ...base,
+        unlocked,
+        visited,
+        unlockedPids,
+        visitedPids,
+        met: (cond) => evalCondition(cond, base, tz),
+      },
+      tz
+    );
     if (visibility === 'hidden') continue;
     const entry: Record<string, unknown> = {
       pid: p.pid,

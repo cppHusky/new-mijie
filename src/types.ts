@@ -29,18 +29,36 @@ export type Description = {
 export type Visibility = 'visible' | 'ghost' | 'hidden';
 
 export interface AccessContext extends UnlockContext {
-  /** 是否已解锁 */
+  /** 本题是否已解锁（unlock===true 或已持久化解锁） */
   readonly unlocked: boolean;
-  /** 是否访问过（潜伏题用） */
+  /** 本题是否访问过（潜伏题用） */
   readonly visited: boolean;
+  /** 跨题：已解锁的 pid 集合（unlock===true 或已持久化解锁） */
+  readonly unlockedPids: ReadonlySet<string>;
+  /** 跨题：已访问过（visited_at 非空）的 pid 集合 */
+  readonly visitedPids: ReadonlySet<string>;
+  /** 函数糖：在当前快照上直接评估声明式解锁条件（与 unlock 求值同时区语义） */
+  met(cond: UnlockCondition): boolean;
 }
+
+/** 声明式可见性规则：when 全部满足（AND）时取 then */
+export type AccessibleRule = {
+  when: UnlockCondition[];
+  then: Visibility;
+};
 
 export type Accessible =
   | 'always'     // 永远可见
   | 'hidden'     // 永不显示（但已解锁时可经 URL 访问）
   | 'suspended'  // 空悬：已解锁→visible，未解锁→ghost（默认值）
   | 'lurking'    // 潜伏：访问前 hidden，访问后 visible
-  | ((ctx: AccessContext) => Visibility);
+  | ((ctx: AccessContext) => Visibility)
+  | {
+      /** 按序匹配，首个 when 全满足的规则生效 */
+      rules: AccessibleRule[];
+      /** 全部落空时的可见性，缺省 'hidden' */
+      fallback?: Visibility;
+    };
 
 // —— 解锁（四维度之二，持久化） ——
 
