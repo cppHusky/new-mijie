@@ -49,7 +49,7 @@ export type AccessibleRule = {
 
 export type Accessible =
   | 'always'     // 永远可见
-  | 'hidden'     // 永不显示（但已解锁时可经 URL 访问）
+  | 'never'      // 永不显示（但已解锁时可经 URL 访问）
   | 'suspended'  // 空悬：已解锁→visible，未解锁→ghost（默认值）
   | 'lurking'    // 潜伏：访问前 hidden，访问后 visible
   | ((ctx: AccessContext) => Visibility)

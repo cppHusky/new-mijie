@@ -30,7 +30,7 @@ export function evalVisibility(
   switch (a) {
     case 'always':
       return 'visible';
-    case 'hidden':
+    case 'never':
       return 'hidden';
     case 'suspended':
       return ctx.unlocked ? 'visible' : 'ghost';

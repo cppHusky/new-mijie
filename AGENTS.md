@@ -413,7 +413,7 @@ type Context = {
 - 配置面（最终）：`pid, name, label?, unlock(必填), accessible?(默认 'suspended'), description{before_solve, after_solve?, admin?}, scores?[{id, desc, points, when?}], checker?/inputs?/server?, hints?, files?, captcha?, record?, showPercent?`。
 - 构建期校验：unlock 必填；pid 唯一（仅大小写不同告警）；label 缺失告警；`accessible==='lurking'` 搭配非 `true` 的 unlock 告警（无意义组合）；scores.id 题内唯一、desc 必填；unlock 与 accessible.rules 引用的 pid 必须存在于注册表；unlock 条件与 accessible.rules 的形状经 `validateConditionShape` 统一校验。
 - **`UnlockDesc`**：解锁条件的 `desc` 除静态字符串外，可给同步函数 `(ctx: UnlockContext, nameOf) => string`（动态展示进度，如 `` `总分达到 5 分（当前 ${ctx.totalPoints} 分）` ``）；函数抛错时回退自动生成文案（custom 兜底「（描述生成失败）」），不会打挂列表。
-- **`AccessibleRule`**：`accessible` 除四预设（always/hidden/suspended/lurking）与自定义函数外，支持声明式规则 `{ rules: [{ when: UnlockCondition[], then: Visibility }], fallback? }`——按序匹配首个 when 全满足（AND）的规则，全落空取 `fallback`（缺省 `'hidden'`）。
+- **`AccessibleRule`**：`accessible` 除四预设（always/never/suspended/lurking）与自定义函数外，支持声明式规则 `{ rules: [{ when: UnlockCondition[], then: Visibility }], fallback? }`——按序匹配首个 when 全满足（AND）的规则，全落空取 `fallback`（缺省 `'never'`）。
 - **desc 可见性掩码**（防泄名）：`evalUnlock` 生成/渲染文案时，引用的 pid 按**当前玩家**对其可见性掩码——visible 显名、ghost 显 `label`（无 label 回退 `???`）、hidden 显 `???`；函数 desc 收到的 `nameOf` 同为掩码版。掩码随进度动态变化（解锁后由 label 变真名）。
 - `Context = { username, gameProcess, gameStorage, msg, content, award, glot, runCode, jwt }`（无 `ai`）；`ServerContext` 将 `msg/content` 换为 `pass/nopass`，其余相同。
 - `gameProcess`：`{ passed: ReadonlySet<string>, scores: ReadonlyMap<string,number>, totalPoints, passedCount }`。
