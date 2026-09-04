@@ -9,7 +9,7 @@
             </div>
         </div>
         <div class=" flex flex-col sm:w-1/3 w-2/3">
-            <router-link v-if="continued.length" :to="continued" tag="button" class="btn btn-ghost m-2 text-xl">继续游戏</router-link>
+            <router-link v-if="hasReadRule" to="/problems" tag="button" class="btn btn-ghost m-2 text-xl">继续游戏</router-link>
             <router-link v-else to="/gamerule?start" tag="button" class="btn btn-ghost m-2 text-xl" @click.stop="start">开始游戏</router-link>
             <router-link to="/gamerule" tag="button" class="btn btn-ghost m-2 text-xl">游戏规则</router-link>
             <router-link to="/about" tag="button" class="btn btn-ghost m-2 text-xl">关于</router-link>
@@ -23,13 +23,12 @@ import { ref } from 'vue'
 import { api } from '@/tools/api'
 import { title } from '@/constants'
 const router = useRouter()
-const continued = ref('')
-if (localStorage.getItem('continue')) {
-    continued.value = localStorage.getItem('continue');
+const hasReadRule = ref(false)
+if (localStorage.getItem('hasReadRule')) {
+    hasReadRule.value=true;
 }
 function start() {
-    if (localStorage.getItem('hasReadRule') !== null) router.push('/problems');
-    else router.push('/gamerule?start');
+    router.push('/gamerule?start');
 }
 </script>
   

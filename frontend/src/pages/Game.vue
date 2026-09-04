@@ -429,7 +429,6 @@ document.addEventListener('scroll', () => {
         percent.value = res.percent
         if (res.files && res.files.length) files.value = res.files
         document.title = res.name + ' | ' + document.title.split(' | ')[1]
-        localStorage.setItem('continue', router.currentRoute.value.fullPath)
     } catch (err) {
         if (err.status == 401) {
             localStorage.setItem('afterLogin', router.currentRoute.value.fullPath)
