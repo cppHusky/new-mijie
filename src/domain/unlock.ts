@@ -61,9 +61,20 @@ export function evalCondition(
 /** 生成解锁条件的人类可读描述；cond.desc 优先（custom 必须自带 desc） */
 export function conditionDesc(
   cond: UnlockCondition,
+  ctx: UnlockContext,
   nameOf: (pid: string) => string
 ): string {
-  if ('desc' in cond && cond.desc) return cond.desc;
+  // desc 为函数：动态生成；抛异常时回退，绝不让一道题打挂整个列表
+  if ('desc' in cond && typeof cond.desc === 'function') {
+    try {
+      const text = cond.desc(ctx, nameOf);
+      if (typeof text === 'string' && text.length) return text;
+    } catch (e) {
+      console.error(`[unlock] 条件 ${cond.type} 的 desc 函数执行异常：`, e);
+    }
+  } else if ('desc' in cond && typeof cond.desc === 'string' && cond.desc) {
+    return cond.desc;
+  }
   switch (cond.type) {
     case 'pass':
       return `通过关卡《${nameOf(cond.pid)}》`;
@@ -89,7 +100,8 @@ export function conditionDesc(
       return `时间窗口：${parts.join('，')}`;
     }
     case 'custom':
-      return cond.desc;
+      // 函数 desc 执行失败（或返回空串）时的兜底
+      return '（描述生成失败）';
   }
 }
 
@@ -102,7 +114,7 @@ export function evalUnlock(
 ): UnlockStatus {
   if (unlock === true) return { conditions: [], canUnlock: true };
   const conditions = unlock.map((c) => ({
-    desc: conditionDesc(c, nameOf),
+    desc: conditionDesc(c, ctx, nameOf),
     met: evalCondition(c, ctx, timeZone),
   }));
   return { conditions, canUnlock: conditions.every((c) => c.met) };

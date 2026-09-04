@@ -71,12 +71,20 @@ export interface UnlockContext {
   readonly now: Date;
 }
 
+/**
+ * 解锁条件描述：静态字符串，或基于只读快照动态生成的同步函数。
+ * 第二参 nameOf 用于引用其他题目的显示名。
+ */
+export type UnlockDesc =
+  | string
+  | ((ctx: UnlockContext, nameOf: (pid: string) => string) => string);
+
 export type UnlockCondition =
-  | { type: 'pass'; pid: string; desc?: string }
-  | { type: 'passCount'; pids: readonly string[]; count: number; desc?: string }
-  | { type: 'points'; atLeast: number; desc?: string }
-  | { type: 'problemPoints'; pid: string; atLeast: number; desc?: string }
-  | { type: 'sumPoints'; pids: readonly string[]; atLeast: number; desc?: string }
+  | { type: 'pass'; pid: string; desc?: UnlockDesc }
+  | { type: 'passCount'; pids: readonly string[]; count: number; desc?: UnlockDesc }
+  | { type: 'points'; atLeast: number; desc?: UnlockDesc }
+  | { type: 'problemPoints'; pid: string; atLeast: number; desc?: UnlockDesc }
+  | { type: 'sumPoints'; pids: readonly string[]; atLeast: number; desc?: UnlockDesc }
   | {
       type: 'time';
       /** ISO 时间字符串，如 '2026-09-01T12:00:00+08:00' */
@@ -84,9 +92,9 @@ export type UnlockCondition =
       before?: string;
       /** 按 vars.TIMEZONE 求值的分钟奇偶 */
       minuteParity?: 'odd' | 'even';
-      desc?: string;
+      desc?: UnlockDesc;
     }
-  | { type: 'custom'; desc: string; when: (ctx: UnlockContext) => boolean };
+  | { type: 'custom'; desc: UnlockDesc; when: (ctx: UnlockContext) => boolean };
 
 /** true = 自动解锁；数组 = 全部满足（AND）才可解锁 */
 export type Unlock = true | UnlockCondition[];

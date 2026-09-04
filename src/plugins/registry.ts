@@ -34,6 +34,59 @@ export function normalizeRelPath(rel: string): string | null {
   return parts.join('/');
 }
 
+
+/** 单个 UnlockCondition 的形状校验；返回错误文案或 null（合法） */
+export function validateConditionShape(cond: any): string | null {
+  if (!cond || typeof cond !== 'object') return '条件必须是对象';
+  const hasAtLeast = (c: any) => typeof c.atLeast === 'number' && Number.isFinite(c.atLeast);
+  const hasPids = (c: any) =>
+    Array.isArray(c.pids) && c.pids.length > 0 && c.pids.every((p: any) => typeof p === 'string' && p);
+  switch (cond.type) {
+    case 'pass':
+      if (!cond.pid || typeof cond.pid !== 'string') return 'pass 缺少 pid';
+      break;
+    case 'problemPoints':
+      if (!cond.pid || typeof cond.pid !== 'string') return 'problemPoints 缺少 pid';
+      if (!hasAtLeast(cond)) return 'problemPoints 的 atLeast 必须是有限数字';
+      break;
+    case 'passCount':
+      if (!hasPids(cond)) return 'passCount 的 pids 必须是非空字符串数组';
+      if (!Number.isInteger(cond.count) || cond.count < 1) return 'passCount 的 count 必须是 ≥1 的整数';
+      break;
+    case 'sumPoints':
+      if (!hasPids(cond)) return 'sumPoints 的 pids 必须是非空字符串数组';
+      if (!hasAtLeast(cond)) return 'sumPoints 的 atLeast 必须是有限数字';
+      break;
+    case 'points':
+      if (!hasAtLeast(cond)) return 'points 的 atLeast 必须是有限数字';
+      break;
+    case 'time':
+      if (!cond.after && !cond.before && !cond.minuteParity)
+        return 'time 必须至少包含 after / before / minuteParity 之一';
+      if (cond.after && isNaN(Date.parse(cond.after))) return 'time.after 不是合法时间';
+      if (cond.before && isNaN(Date.parse(cond.before))) return 'time.before 不是合法时间';
+      if (cond.minuteParity && cond.minuteParity !== 'odd' && cond.minuteParity !== 'even')
+        return 'minuteParity 必须是 odd / even';
+      break;
+    case 'custom':
+      if (!cond.desc || (typeof cond.desc !== 'string' && typeof cond.desc !== 'function'))
+        return 'custom 必须提供 desc（字符串或函数）';
+      if (typeof cond.when !== 'function') return 'custom 必须提供 when 函数';
+      break;
+    default:
+      return `未知条件类型「${(cond as any).type}」`;
+  }
+  if (
+    'desc' in cond &&
+    cond.desc !== undefined &&
+    typeof cond.desc !== 'string' &&
+    typeof cond.desc !== 'function'
+  ) {
+    return 'desc 必须是字符串或函数（UnlockDesc）';
+  }
+  return null;
+}
+
 /** 单插件校验与归一化。返回 null 表示拒绝加载（error 已写入 issues）。 */
 export function validatePlugin(
   folder: string,
@@ -62,6 +115,15 @@ export function validatePlugin(
   if (plugin.unlock !== true && !Array.isArray(plugin.unlock)) {
     error('unlock 必须是 true 或条件数组');
     return null;
+  }
+  if (Array.isArray(plugin.unlock)) {
+    for (const cond of plugin.unlock as any[]) {
+      const shapeError = validateConditionShape(cond);
+      if (shapeError) {
+        error(`unlock 条件非法：${shapeError}`);
+        return null;
+      }
+    }
   }
   const before = plugin.description?.before_solve;
   if (!before || (!before.mdv && !before.md && !before.content)) {
@@ -100,6 +162,13 @@ export function validatePlugin(
       if (!Array.isArray(rule?.when) || !VISIBILITIES.includes(rule?.then)) {
         error(`accessible.rules[${i}] 必须是 { when: UnlockCondition[], then: visible|ghost|hidden }`);
         return null;
+      }
+      for (const cond of rule.when as any[]) {
+        const shapeError = validateConditionShape(cond);
+        if (shapeError) {
+          error(`accessible.rules[${i}] 条件非法：${shapeError}`);
+          return null;
+        }
       }
     }
     if (a.fallback !== undefined && !VISIBILITIES.includes(a.fallback)) {

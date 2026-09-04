@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { minimatch } from 'minimatch';
 import type { Env, Variables } from '../env';
 import { normalizeRelPath } from '../plugins/registry';
-import { rawAssets } from '../plugins/manifest.generated';
+import { rawAssets, binaryAssets } from '../plugins/manifest.generated';
 import { requirePlayable } from '../lib/playable';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -24,6 +24,9 @@ const CONTENT_TYPES: Record<string, string> = {
   webp: 'image/webp',
   pdf: 'application/pdf',
   zip: 'application/zip',
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  ogg: 'audio/ogg',
 };
 
 /** include/exclude 白名单（minimatch，沿袭 mijie checkAllowedFiles 语义） */
@@ -77,7 +80,16 @@ app.get('/file/:pid/:path{.*}', async (c) => {
     return c.text(content, 200, { 'Content-Type': type });
   }
 
-  // 2) R2 回退（大二进制附件，键为 game/<folder>/<path>）
+  // 2) 打包内二进制资产（base64 内联的小附件）
+  const b64 = binaryAssets[key];
+  if (b64 !== undefined) {
+    const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
+    return new Response(bytes.buffer as ArrayBuffer, {
+      headers: { 'Content-Type': CONTENT_TYPES[ext] ?? 'application/octet-stream' },
+    });
+  }
+
+  // 3) R2 回退（大二进制附件，键为 game/<folder>/<path>）
   if (c.env.R2_BUCKET) {
     const obj = await c.env.R2_BUCKET.get(`game/${key}`);
     if (obj) {

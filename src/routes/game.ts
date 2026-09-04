@@ -4,7 +4,6 @@ import type { Env, Variables } from '../env';
 import {
   plugins,
   pluginByPid,
-  nameOf,
   hints,
   hiddenRecord,
   type RegisteredPlugin,
@@ -12,13 +11,13 @@ import {
 import { evalCondition, evalUnlock } from '../domain/unlock';
 import { evalVisibility } from '../domain/visibility';
 import { getGameConfig, checkGameWindow } from '../lib/config';
-import { loadUserState, loadGameStorage, unlockContextOf } from '../lib/state';
+import { loadUserState, loadGameStorage, unlockContextOf, type UserState } from '../lib/state';
 import { createAward, persistOutcome, type AwardedItem } from '../lib/pipeline';
 import { buildContext } from '../lib/context';
 import { problemNotFound, requirePlayable, getPercent } from '../lib/playable';
 import { publish } from '../lib/publish';
 import { verifyTurnstile } from '../lib/turnstile';
-import type { Context, ServerContext } from '../types';
+import type { Context, ServerContext, UnlockCondition, UnlockContext } from '../types';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -34,14 +33,8 @@ async function publishRankIfChanged(
   }
 }
 
-// —— 题目列表 ——
-
-app.get('/problems', async (c) => {
-  const state = await loadUserState(c.env.DB, c.get('username'));
-  const now = new Date();
-  const tz = tzOf(c.env);
-  const base = unlockContextOf(state, now);
-  // 跨题状态集合（unlocked 语义与单题一致：unlock===true 或已持久化解锁）
+/** 跨题快照（AccessContext 公共部分）：全表一次计算，供列表内所有题目共享 */
+function accessBaseOf(state: UserState, base: UnlockContext, tz: string) {
   const unlockedPids = new Set<string>();
   const visitedPids = new Set<string>();
   for (const p of plugins) {
@@ -49,23 +42,51 @@ app.get('/problems', async (c) => {
     if (p.unlock === true || st?.unlocked_at != null) unlockedPids.add(p.pid);
     if (st?.visited_at != null) visitedPids.add(p.pid);
   }
+  return {
+    unlockedPids,
+    visitedPids,
+    met: (cond: UnlockCondition) => evalCondition(cond, base, tz),
+  };
+}
+
+/**
+ * 玩家感知的掩码查名（desc 生成用，防泄名）：
+ * visible → 题面名；ghost → label（幽灵行本就公示 label），无 label 回退 ???；hidden → ???。
+ */
+function maskedNameOf(
+  state: UserState,
+  accessBase: ReturnType<typeof accessBaseOf>,
+  base: UnlockContext,
+  tz: string
+) {
+  return (pid: string): string => {
+    const p = pluginByPid.get(pid);
+    if (!p) return '???';
+    const st = state.states.get(pid);
+    const unlocked = p.unlock === true || st?.unlocked_at != null;
+    const visited = st?.visited_at != null;
+    const vis = evalVisibility(p.accessible, { ...base, ...accessBase, unlocked, visited }, tz);
+    if (vis === 'visible') return p.name;
+    if (vis === 'ghost') return p.label ?? '???';
+    return '???';
+  };
+}
+
+// —— 题目列表 ——
+
+app.get('/problems', async (c) => {
+  const state = await loadUserState(c.env.DB, c.get('username'));
+  const now = new Date();
+  const tz = tzOf(c.env);
+  const base = unlockContextOf(state, now);
+  const accessBase = accessBaseOf(state, base, tz);
+  const displayName = maskedNameOf(state, accessBase, base, tz);
   const list = [];
   for (const p of plugins) {
     const st = state.states.get(p.pid);
     const unlocked = p.unlock === true || st?.unlocked_at != null;
     const visited = st?.visited_at != null;
-    const visibility = evalVisibility(
-      p.accessible,
-      {
-        ...base,
-        unlocked,
-        visited,
-        unlockedPids,
-        visitedPids,
-        met: (cond) => evalCondition(cond, base, tz),
-      },
-      tz
-    );
+    const visibility = evalVisibility(p.accessible, { ...base, ...accessBase, unlocked, visited }, tz);
     if (visibility === 'hidden') continue;
     const entry: Record<string, unknown> = {
       pid: p.pid,
@@ -77,7 +98,7 @@ app.get('/problems', async (c) => {
     };
     if (visibility === 'visible') entry.name = p.name;
     if (!unlocked) {
-      const u = evalUnlock(p.unlock, base, tz, nameOf);
+      const u = evalUnlock(p.unlock, base, tz, displayName);
       entry.conditions = u.conditions;
       entry.canUnlock = u.canUnlock;
     }
@@ -99,7 +120,9 @@ app.post('/problems/:pid/unlock', async (c) => {
     return c.json({ unlocked: true, already: true });
   }
   const now = new Date();
-  const u = evalUnlock(plugin.unlock, unlockContextOf(state, now), tzOf(c.env), nameOf);
+  const base = unlockContextOf(state, now);
+  const displayName = maskedNameOf(state, accessBaseOf(state, base, tzOf(c.env)), base, tzOf(c.env));
+  const u = evalUnlock(plugin.unlock, base, tzOf(c.env), displayName);
   if (!u.canUnlock) {
     return c.json({ unlocked: false, conditions: u.conditions });
   }
