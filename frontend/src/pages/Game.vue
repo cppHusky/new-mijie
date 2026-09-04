@@ -46,7 +46,7 @@
             </div>
         </div>
         <div v-if="scores.length" class="mx-auto text-center flex flex-col items-center justify-center card container">
-            <h2 class="text-xl my-5 font-bold">得分任务清单</h2>
+            <h2 class="text-xl my-5 font-bold">得分表</h2>
             <ul class="menu bg-base-200 w-full rounded-box mb-5">
                 <li v-for="s in scores" :key="s.id">
                     <a class="flex justify-between select-text" style="white-space: pre-wrap; word-break: break-all;">
