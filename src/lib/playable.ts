@@ -18,7 +18,7 @@ export async function requirePlayable(c: C, pid: string): Promise<Playable | Res
   if (!plugin) return problemNotFound(c, pid);
   const state = await loadUserState(c.env.DB, c.get('username'));
   const unlocked = plugin.unlock === true || state.states.get(pid)?.unlocked_at != null;
-  if (!unlocked && c.get('admin') < 1) return problemNotFound(c, pid);
+  if (!unlocked) return problemNotFound(c, pid);
   return { plugin, state };
 }
 
