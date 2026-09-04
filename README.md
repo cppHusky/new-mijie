@@ -19,12 +19,11 @@ pnpm install && pnpm --dir frontend install --frozen-lockfile
 cp .dev.vars.example .dev.vars   # 填入 JWT_SECRET（其余可选）
 pnpm dev                         # Worker + 静态资产，http://localhost:8787
 pnpm --dir frontend dev          # 前端热更新，http://localhost:5173（代理 /api → 8787）
-pnpm test                        # Vitest（@cloudflare/vitest-pool-workers，含 D1 迁移）
 ```
 
 注意：
 
-- `game/` 下的题目在**构建时**由 `scripts/gen-manifest.mjs` 打包进 Worker（`pnpm dev/test/deploy` 会自动重新生成清单）。新增/删除/重命名题目后，`wrangler dev` 不会自动感知新目录，需重启 dev。
+- `game/` 下的题目在**构建时**由 `scripts/gen-manifest.mjs` 打包进 Worker（`pnpm dev/deploy` 与 postinstall 会自动重新生成清单）。新增/删除/重命名题目后，`wrangler dev` 不会自动感知新目录，需重启 dev。
 - 前端是独立 pnpm 项目，依赖必须按 lockfile 精确安装（见 AGENTS.md 第 13 节）。
 
 ## 部署
@@ -87,7 +86,6 @@ export default createPlugin({
 | 命令 | 说明 |
 |---|---|
 | `pnpm dev` | 本地运行 Worker（含 D1 本地库、DO、静态资产） |
-| `pnpm test` | 全部测试（域模型 + API 集成 + 移植题验证） |
 | `pnpm gen` | 手动重新生成题目清单 |
 | `pnpm build` | 构建前端到 `frontend/dist` |
 | `pnpm deploy` | 生成清单 + 构建前端 + `wrangler deploy` |

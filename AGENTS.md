@@ -390,7 +390,6 @@ type Context = {
 | `/api/file` + fs + brotli | 文本资产 `import.meta.glob(..., { as: 'raw' })` 打包；大二进制附件放 **R2** | 已定，P4 实施 |
 | Caddy + 静态目录 | Workers **Static Assets** + SPA fallback，`/api/*` `run_worker_first` | 已定 |
 | ejs | 移除（gameover 已删，无模板需求） | 已定 |
-| bun test | **Vitest + @cloudflare/vitest-pool-workers** | 已定 |
 
 ## 8. 数据模型（D1）
 
@@ -463,7 +462,6 @@ puzzle-framework/
 ├── frontend/               # Vue 3 SPA（自 mijie 改造）
 ├── migrations/             # D1 迁移
 ├── scripts/gen-manifest.mjs # 题目清单代码生成器
-├── test/                   # Vitest（apply-migrations.ts 为 D1 迁移 setup）
 ├── wrangler.jsonc
 └── AGENTS.md
 ```
@@ -471,12 +469,11 @@ puzzle-framework/
 ## 12. 开发与部署工作流
 
 ```bash
-pnpm install && pnpm --dir frontend install
+pnpm install && pnpm --dir frontend install --frozen-lockfile
 pnpm dev                 # wrangler dev（Worker + 静态资产，:8787）
 pnpm --dir frontend dev  # vite dev（:5173，代理 /api → :8787）
-pnpm test                # vitest（@cloudflare/vitest-pool-workers）
 pnpm build               # 前端构建 → frontend/dist
-wrangler deploy          # 一键上线（首次需先创建 D1 并填入 database_id）
+pnpm deploy              # gen + 前端构建 + wrangler deploy（首次需先创建 D1 并填入 database_id）
 ```
 
 首个注册用户自动成为超级管理员（admin=2）——沿用 mijie 约定。
@@ -485,7 +482,7 @@ wrangler deploy          # 一键上线（首次需先创建 D1 并填入 databa
 
 - 全 TypeScript；后端禁止 Node API，一切存储走 CF 绑定；时间条件按 `vars.TIMEZONE`（默认 `Asia/Shanghai`）求值。
 - `game/` 下只允许依赖 `src/types`。
-- 提交前必须 `pnpm test` 与 `pnpm --dir frontend build` 通过。
+- 提交前必须 `npx tsc --noEmit` 与 `pnpm --dir frontend build` 通过。（注：Vitest 测试设施已应所有者要求移除，`pnpm test` 不复存在）
 - 密钥走 `wrangler secret`（JWT_SECRET、TURNSTILE_SECRET、GLOT_IO_API_KEY），非密变量写 `wrangler.jsonc` 的 `vars`。
 - frontend 是独立 pnpm 项目（非 workspace 成员），依赖必须用 `pnpm --dir frontend install --frozen-lockfile` 按 lockfile 精确安装；升级 mermaid 等重依赖前必须验证构建（新版本曾导致 `vite build` 内存溢出）。
 

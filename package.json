@@ -9,7 +9,6 @@
     "dev": "pnpm gen && wrangler dev",
     "dev:frontend": "pnpm --dir frontend dev",
     "build": "pnpm --dir frontend build",
-    "test": "pnpm gen && vitest run",
     "deploy": "pnpm gen && pnpm --dir frontend build && wrangler deploy",
     "db:migrate:local": "wrangler d1 migrations apply puzzle_db --local",
     "db:migrate:remote": "wrangler d1 migrations apply puzzle_db --remote"
@@ -21,11 +20,8 @@
     "minimatch": "^10.2.6"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@cloudflare/workers-types": "^5.20260828.1",
     "typescript": "^7.0.2",
-    "vite": "^8.2.2",
-    "vitest": "^4.1.11",
     "wrangler": "^4.127.0"
   }
 }
