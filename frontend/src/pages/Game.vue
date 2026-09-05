@@ -21,7 +21,7 @@
             </template>
             <template v-if="gameState == 1 || !solved_description">
                 <div class="min-h-[100px] items-center justify-center flex flex-col">
-                    <Problem :description="problem"></Problem>
+                    <Problem :description="problem" :key="problemKey"></Problem>
                 </div>
                 <FileList v-if="files.length" :files="files" @download="downloadFile" />
             </template>
@@ -134,7 +134,7 @@
                         返回题目列表
                     </button>
                     <button class="btn btn-outline mb-5"
-                        @click="problem = initProblem, gameState = 1, records = [], nextTick(resize)">
+                        @click="retry">
                         再试一次
                     </button>
                 </div>
@@ -188,6 +188,19 @@ const hints = ref([])
 const show_turnstile = ref(false)
 const loading2 = ref(false)
 let initProblem = null
+const problemKey = ref(0)
+function retry() {
+    problem.value = initProblem
+    gameState.value = 1
+    records.value = []
+    problemKey.value++
+    ans.value = ''
+    if (inputs.value && inputs.value !== true) {
+        answers.value = inputs.value.map(() => '')
+    }
+    cf_token = null
+    nextTick(resize)
+}
 function resize() {
     function resizeTextarea(el) {
         el.style.height = 'auto';

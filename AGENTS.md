@@ -418,6 +418,7 @@ type Context = {
 - `Context = { username, gameProcess, gameStorage, msg, content, award, glot, runCode, jwt }`（无 `ai`）；`ServerContext` 将 `msg/content` 换为 `pass/nopass`，其余相同。
 - `gameProcess`：`{ passed: ReadonlySet<string>, scores: ReadonlyMap<string,number>, totalPoints, passedCount }`。
 - `gameStorage` 接口与 mijie 相同（`get/set/delete/clear`，同步读内存快照）。
+- **重试契约**：玩家点击「再试一次」时，前端强制重挂载题面组件（`Game.vue` 对 `<Problem>` 施加自增 `:key`），mdv 交互组件会重新执行 setup 并重新调用 `init` 事件。**交互题的 `init` 应视为重置入口**（覆写 gameStorage 为全新状态），这是框架级契约，不依赖玩家手动刷新页面。
 - `AccessContext` 在 `UnlockContext` 之上附加 `unlocked/visited/unlockedPids/visitedPids/met(cond)`（跨题快照 + 条件求值函数糖），供 accessible 求值使用。
 
 ## 10. API 一览（新架构）
