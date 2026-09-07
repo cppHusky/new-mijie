@@ -140,7 +140,7 @@ function lightClass(i) {
 }
 function lightLabel(i) {
     const st = lightState(i);
-    return st >= 2 ? '到达（S 波）' : st >= 1 ? '预警（P 波）' : '待命中';
+    return st >= 2 ? '到达' : st >= 1 ? '预警' : '待命';
 }
 function timeOf(i, key) {
     return ((schedule.value[i][key] - startedAt.value) / 1000).toFixed(3);
