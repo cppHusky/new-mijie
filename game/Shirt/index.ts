@@ -39,16 +39,8 @@ export default createPlugin({
 			return "ghost";
 		return "hidden";
 	},
-	scores:[
-		{
-			id:"Shirt.jump",
-			desc:"想当然",
-			points:-5,
-			when:async(ans,_)=>parseFloat(ans)===9.15,
-		},
-	],
 	inputs:true,
-	checker:async(ans,_)=>parseFloat(ans)===9.75,
+	checker:async(ans,_)=>parseFloat(ans)===9.15,
 	files:[
 		{
 			filename:"audio.mp3",
