@@ -11,7 +11,7 @@ export async function signToken(secret: string, payload: TokenPayload): Promise<
   return new SignJWT({ admin: payload.admin })
     .setSubject(payload.sub)
     .setIssuedAt()
-    .setExpirationTime('1d')
+    .setExpirationTime('7d')
     .setProtectedHeader({ alg: 'HS256' })
     .sign(enc(secret));
 }
