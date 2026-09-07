@@ -25,9 +25,9 @@ export default createPlugin({
   checker:async(ans,ctx)=>{
     let inputTime=ctx.gameStorage.get<number>("GuessNumber.time")??0;
     let target=ctx.gameStorage.get<number>("GuessNumber.target");
-    if(target===undefined){
-      ctx.gameStorage.set("GuessNumber.target",target);
+    if(!target){
       target=1+Math.floor(99.9999*Math.random());
+      ctx.gameStorage.set("GuessNumber.target",target);
     }
     const input=parseFloat(ans);
     inputTime++;
