@@ -4,9 +4,9 @@ import createPlugin, { type ServerContext } from "../../src/types";
 const START_STAMINA = 100;   // 初始体力
 const BASE_COST = 5;         // 移动基础消耗（顺流 -1 / 逆流 +1）
 const VISION_BASE = 2;       // 基础视野半径
-const LAND_MIN = 13;         // 大陆距离下限
-const LAND_SPAN = 10;        // 大陆距离 ∈ [13, 22]
-const BOTTLE_DAYS_PER_TILE = 1; // 漂流瓶信件：每远离大陆 1 格，投瓶日期就早 1 天
+const LAND_MIN = 13;         // 定居点距离下限
+const LAND_SPAN = 10;        // 定居点距离 ∈ [13, 22]
+const BOTTLE_DAYS_PER_TILE = 1; // 漂流瓶信件：每远离定居点 1 格，投瓶日期就早 1 天
 const RIDE_WHALE = 3;        // 鲸鱼搭载格数
 const RIDE_TURTLE = 4;       // 老鼋第一次搭载格数
 const DUMP_MIN = 4;          // 甩飞/传送距离下限
@@ -49,7 +49,7 @@ type EventKind = (typeof EVENT_KINDS)[number];
 const ITEM_INFO: Record<string, { name: string; desc: string }> = {
 	fish: { name: "鱼", desc: "使用后恢复 5 点体力" },
 	starfish: { name: "海星", desc: "使用后恢复 8 点体力" },
-	compass: { name: "罗盘", desc: "揭示大陆所在的方向" },
+	compass: { name: "罗盘", desc: "揭示定居点所在的方向" },
 	telescope: { name: "望远镜", desc: "视野 +2，持续 4 回合" },
 	lifeRing: { name: "救生圈", desc: "被动：替你抵挡一次鲨鱼袭击" },
 };
@@ -68,7 +68,7 @@ interface Pos {
 
 interface State {
 	seed: number;
-	D: number;           // 大陆方向（0-5）
+	D: number;           // 定居点方向（0-5）
 	landQ: number;
 	landR: number;
 	today: number;       // 本局「今天」的零点时间戳（UTC+8），漂流瓶日期以此为基准
@@ -155,7 +155,7 @@ function visibleTiles(state: State) {
 	return tiles;
 }
 
-/** 漂流瓶信件：投瓶日期 = 今天 - 与大陆的格距（严格单调：日期越新，离大陆越近） */
+/** 漂流瓶信件：投瓶日期 = 今天 - 与定居点的格距（严格单调：日期越新，离定居点越近） */
 function bottleInfo(state: State, q: number, r: number) {
 	const daysAgo = Math.max(1, hexDist(q, r, state.landQ, state.landR) * BOTTLE_DAYS_PER_TILE);
 	const d = new Date(state.today + 8 * 3600 * 1000 - daysAgo * 86400 * 1000);
@@ -163,7 +163,7 @@ function bottleInfo(state: State, q: number, r: number) {
 	return dateStr;
 }
 
-/** 从玩家当前位置指向大陆的六方向（动态：走过大陆后方向自然翻转） */
+/** 从玩家当前位置指向定居点的六方向（动态：走过定居点后方向自然翻转） */
 function dirToLand(state: State): number {
 	const dq = state.landQ - state.pos.q;
 	const dr = state.landR - state.pos.r;
@@ -206,8 +206,8 @@ function tickBuffs(state: State) {
 
 function win(state: State, log: string[], ctx: ServerContext) {
 	state.won = true;
-	log.push("前方出现了一条海岸线——你终于踏上了大陆！");
-	ctx.pass(`在第 ${state.turn} 回合成功抵达大陆`);
+	log.push("前方出现了一条海岸线——你终于踏上了定居点！");
+	ctx.pass(`在第 ${state.turn} 回合成功抵达定居点`);
 }
 function die(state: State, cause: string, log: string[], ctx: ServerContext) {
 	if (state.dead) return;
@@ -217,7 +217,7 @@ function die(state: State, cause: string, log: string[], ctx: ServerContext) {
 	ctx.nopass(cause);
 }
 
-/** 载人移动：逐格朝大陆前进（动态导航），遇鲨鱼停止，抵达大陆直接通关 */
+/** 载人移动：逐格朝定居点前进（动态导航），遇鲨鱼停止，抵达定居点直接通关 */
 function ride(state: State, log: string[], steps: number, who: string, depth: number, ctx: ServerContext) {
 	state.prevPos = { ...state.pos };
 	for (let i = 0; i < steps; i++) {
@@ -238,7 +238,7 @@ function ride(state: State, log: string[], steps: number, who: string, depth: nu
 	arrive(state, log, depth + 1, ctx);
 }
 
-/** 随机甩飞：落点避开鲨鱼与大陆，防止摔死/白嫖通关 */
+/** 随机甩飞：落点避开鲨鱼与定居点，防止摔死/白嫖通关 */
 function dump(state: State, log: string[], fallbackLog: string, depth: number, ctx: ServerContext) {
 	const ox = state.pos.q, oy = state.pos.r;
 	for (let i = 0; i < 16; i++) {
@@ -303,7 +303,7 @@ function arrive(state: State, log: string[], depth: number, ctx: ServerContext) 
 		case "lighthouse":
 			state.visionTurns = LIGHTHOUSE_TURNS;
 			state.visionBoost = 1;
-			log.push(`礁石上矗立着一座灯塔。守塔人告诉你：大陆在${DIR_NAMES[dirToLand(state)]}方。灯火让远处的海面清晰起来（视野 +1，持续 ${LIGHTHOUSE_TURNS} 回合）。`);
+			log.push(`礁石上矗立着一座灯塔。守塔人告诉你：定居点在${DIR_NAMES[dirToLand(state)]}方。灯火让远处的海面清晰起来（视野 +1，持续 ${LIGHTHOUSE_TURNS} 回合）。`);
 			break;
 		case "warmCurrent":
 			heal(state, 5);
@@ -481,14 +481,14 @@ export default createPlugin({
 				won: false,
 			};
 			ctx.gameStorage.set("state", state);
-			const log = ["你被海浪卷到了茫茫大海之中。大陆的方向尚未可知……"];
+			const log = ["你被海浪卷到了茫茫大海之中。定居点的方向尚未可知……"];
 			if (state.islands) log.push("大地的庇护与你同在：海洋中散布着可以歇脚的岛屿。");
 			return snapshot(state, log);
 		});
 		app.on("move", (data: { dir?: unknown }, ctx) => {
 			const state = ctx.gameStorage.get<State>("state");
 			if (!state) return { ok: false, reason: "尚未开始游戏，请刷新页面重试" };
-			if (state.won) return { ok: false, reason: "你已经到达了大陆" };
+			if (state.won) return { ok: false, reason: "你已经到达了定居点" };
 			if (state.dead) return { ok: false, reason: "你已经沉入大海，请刷新页面重新开始" };
 			const dir = data?.dir;
 			if (typeof dir !== "number" || !Number.isInteger(dir) || dir < 0 || dir > 5) {
@@ -529,7 +529,7 @@ export default createPlugin({
 		app.on("use", (data: { item?: unknown }, ctx) => {
 			const state = ctx.gameStorage.get<State>("state");
 			if (!state) return { ok: false, reason: "尚未开始游戏，请刷新页面重试" };
-			if (state.won) return { ok: false, reason: "你已经到达了大陆" };
+			if (state.won) return { ok: false, reason: "你已经到达了定居点" };
 			if (state.dead) return { ok: false, reason: "你已经沉入大海，请刷新页面重新开始" };
 			const id = data?.item;
 			if (typeof id !== "string" || !Object.hasOwn(ITEM_INFO, id)) {

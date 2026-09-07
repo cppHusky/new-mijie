@@ -27,7 +27,7 @@
                         <span v-if="isPlayer(t)" class="kind-emoji">🏊</span>
                         <span v-else class="kind-emoji">{{ KIND_ICON[t.kind] || '' }}</span>
                     </div>
-                    <div v-if="won" class="overlay won">🏖️ 你抵达了大陆！<br />恭喜通关</div>
+                    <div v-if="won" class="overlay won">🏖️ 你抵达了定居点！<br />恭喜通关</div>
                     <div v-else-if="dead" class="overlay dead">☠️ {{ deadCause }}<br />刷新页面可以重新开始</div>
                     <div v-else-if="wash" class="overlay wash">🌊 你被冲到了远处……</div>
                 </div>
@@ -71,7 +71,7 @@ const KIND_ICON = {
 const ITEM_META = {
     fish: { icon: "🐟", name: "鱼", desc: "使用后恢复 5 点体力", usable: true },
     starfish: { icon: "⭐", name: "海星", desc: "使用后恢复 8 点体力", usable: true },
-    compass: { icon: "🧭", name: "罗盘", desc: "揭示大陆所在的方向", usable: true },
+    compass: { icon: "🧭", name: "罗盘", desc: "揭示定居点所在的方向", usable: true },
     telescope: { icon: "🔭", name: "望远镜", desc: "视野 +2，持续 4 回合", usable: true },
     lifeRing: { icon: "🛟", name: "救生圈", desc: "被动：替你抵挡一次鲨鱼袭击", usable: false },
 };
