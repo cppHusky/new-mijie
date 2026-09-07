@@ -19,5 +19,5 @@ export default createPlugin({
 		},
 	],
 	inputs:true,
-	checker:async(ans,_)=>ans.trim()===0.3,
+	checker:async(ans,_)=>ans.trim()==="0.3",
 });
