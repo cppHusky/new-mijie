@@ -51,8 +51,8 @@
                 <li v-for="s in scores" :key="s.id">
                     <a class="flex justify-between select-text" style="white-space: pre-wrap; word-break: break-all;">
                         <span>
-                            <font-awesome-icon :icon="['fas', 'circle-check']" class="mr-2"
-                                :class="s.achieved ? 'text-success' : 'opacity-30'" />{{ s.desc }}
+                            <font-awesome-icon :icon="['fas', s.achieved ? 'circle-check' : 'circle-xmark']" class="mr-2"
+                                :class="s.achieved ? 'text-success' : 'text-gray-500'" />{{ s.desc }}
                         </span>
                         <span class="font-mono ml-3 shrink-0" :class="s.points >= 0 ? 'text-success' : 'text-error'">
                             {{ s.points > 0 ? '+' : '' }}{{ s.points }} 分
