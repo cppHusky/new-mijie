@@ -4,6 +4,7 @@ import type { Env, Variables } from '../env';
 import { normalizeRelPath } from '../plugins/registry';
 import { rawAssets, binaryAssets } from '../plugins/manifest.generated';
 import { requirePlayable } from '../lib/playable';
+import { getGameConfig, checkGameWindow } from '../lib/config';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -41,6 +42,8 @@ function checkAllowed(
 
 app.get('/file/:pid/:path{.*}', async (c) => {
   const pid = c.req.param('pid');
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
+  if (err) return c.text(err, 400);
   const playable = await requirePlayable(c, pid);
   if (playable instanceof Response) return playable;
   const { plugin, state } = playable;

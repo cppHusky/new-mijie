@@ -3,7 +3,7 @@ import type { Env, Variables } from '../env';
 import { hashPassword, verifyPassword } from '../lib/password';
 import { signToken } from '../lib/jwt';
 import { verifyTurnstile } from '../lib/turnstile';
-import { getGameConfig, type GameConfig } from '../lib/config';
+import { getGameConfig, formatGameTime, type GameConfig } from '../lib/config';
 
 const QQ_RE = /^[1-9]\d{4,10}$/;
 
@@ -93,12 +93,17 @@ authedRoutes.get('/me', async (c) => {
     .bind(c.get('username'))
     .first<{ username: string; admin: number; qq: string | null; total_points: number; passed_count: number }>();
   if (!user) return c.text('用户不存在', 401);
+  const config = await getGameConfig(c.env.DB);
+  const startTime = config.startTime ?? null;
+  const started = !startTime || new Date(startTime).getTime() <= Date.now();
   return c.json({
     username: user.username,
     admin: user.admin,
     qq: user.qq,
     totalPoints: user.total_points,
     passedCount: user.passed_count,
+    started,
+    startTime: startTime ? formatGameTime(startTime, c.env.TIMEZONE) : null,
   });
 });
 

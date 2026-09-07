@@ -1,7 +1,8 @@
 import * as VueRouter from 'vue-router'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
-import { user } from '@/tools/bus'
+import { user, refreshGameStatus } from '@/tools/bus'
+import notificationManager from '@/tools/notification.js'
 import { title } from '@/constants'
 
 const router = VueRouter.createRouter({
@@ -17,7 +18,7 @@ const router = VueRouter.createRouter({
             path: '/hint',
             name: 'hint',
             component: () => import('./pages/Hint.vue'),
-            meta: { title: '题目' }
+            meta: { title: '题目', game: true }
         },
         {
             path: '/gamerule',
@@ -35,7 +36,7 @@ const router = VueRouter.createRouter({
             path: '/problems',
             name: 'problems',
             component: () => import('./pages/Problems.vue'),
-            meta: { title: '题目列表' }
+            meta: { title: '题目列表', game: true }
         },
         {
             path: '/login',
@@ -59,19 +60,19 @@ const router = VueRouter.createRouter({
             path: '/game/:pid',
             name: 'game',
             component: () => import('./pages/Game.vue'),
-            meta: { title: '游戏' }
+            meta: { title: '游戏', game: true }
         },
         {
             path: '/record/:pid?',
             name: 'record',
             component: () => import('./pages/Record.vue'),
-            meta: { title: '提交记录' }
+            meta: { title: '提交记录', game: true }
         },
         {
             path: '/rank',
             name: 'rank',
             component: () => import('./pages/Rank.vue'),
-            meta: { title: '排行榜' }
+            meta: { title: '排行榜', game: true }
         },
         {
             path: '/users',
@@ -101,10 +102,22 @@ const router = VueRouter.createRouter({
 })
 NProgress.configure({ showSpinner: false });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     if (user.admin?.value < 1 && to.meta.admin) {
         next({ path: '/404', replace: true,  })
         return
+    }
+    if (to.meta.game && user.login?.value && user.admin?.value < 1) {
+        const { started } = await refreshGameStatus()
+        if (!started) {
+            notificationManager.add({
+                message: `游戏未开始`,
+                type: 'error',
+                time: 5000,
+            })
+            next({ path: '/', replace: true })
+            return
+        }
     }
     document.title = to.meta.title + " | " + title 
     NProgress.start()

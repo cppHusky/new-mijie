@@ -75,6 +75,8 @@ function maskedNameOf(
 // —— 题目列表 ——
 
 app.get('/problems', async (c) => {
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
+  if (err) return c.text(err, 400);
   const state = await loadUserState(c.env.DB, c.get('username'));
   const now = new Date();
   const tz = tzOf(c.env);
@@ -113,7 +115,7 @@ app.post('/problems/:pid/unlock', async (c) => {
   const pid = c.req.param('pid');
   const plugin = pluginByPid.get(pid);
   if (!plugin) return problemNotFound(c, pid);
-  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1);
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
   if (err) return c.text(err, 400);
   const state = await loadUserState(c.env.DB, c.get('username'));
   if (plugin.unlock === true || state.states.get(pid)?.unlocked_at != null) {
@@ -140,6 +142,8 @@ app.post('/problems/:pid/unlock', async (c) => {
 
 app.get('/problem/:pid', async (c) => {
   const pid = c.req.param('pid');
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
+  if (err) return c.text(err, 400);
   const playable = await requirePlayable(c, pid);
   if (playable instanceof Response) return playable;
   const { plugin, state } = playable;
@@ -190,7 +194,7 @@ app.post('/problem/:pid', async (c) => {
   const playable = await requirePlayable(c, pid);
   if (playable instanceof Response) return playable;
   const { plugin, state } = playable;
-  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1);
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
   if (err) return c.text(err, 400);
   if (plugin.inputs === false || typeof plugin.checker !== 'function') {
     return c.text('该关卡不能提交答案', 400);
@@ -266,7 +270,7 @@ app.post('/problem/:pid/server', async (c) => {
   const playable = await requirePlayable(c, pid);
   if (playable instanceof Response) return playable;
   const { plugin, state } = playable;
-  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1);
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
   if (err) return c.text(err, 400);
   const isAdminApi = c.get('admin') >= 1 && c.req.query('admin') === 'true';
   const body = await c.req.json().catch(() => ({}) as any);
@@ -355,6 +359,8 @@ app.post('/problem/:pid/server', async (c) => {
 
 app.get('/skipProblem/:pid', async (c) => {
   const pid = c.req.param('pid');
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
+  if (err) return c.text(err, 400);
   const plugin = pluginByPid.get(pid);
   if (!plugin) return problemNotFound(c, pid);
   const state = await loadUserState(c.env.DB, c.get('username'));
@@ -377,6 +383,8 @@ app.get('/skipProblem/:pid', async (c) => {
 // —— 排行榜（passed_count desc, total_points desc, last_progress_at asc；并列同名次） ——
 
 app.get('/rank', async (c) => {
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
+  if (err) return c.text(err, 400);
   const rows = await c.env.DB.prepare(
     `SELECT username, passed_count, total_points, last_progress_at FROM users
      WHERE banned = 0 AND hidden = 0
@@ -411,6 +419,8 @@ app.get('/rank', async (c) => {
 // —— 提交记录 ——
 
 app.get('/record', async (c) => {
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
+  if (err) return c.text(err, 400);
   const q = c.req.query();
   const all = q.all === 'true';
   const username = c.get('username');
@@ -462,6 +472,8 @@ app.get('/record', async (c) => {
 });
 
 app.get('/submitted_problems', async (c) => {
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
+  if (err) return c.text(err, 400);
   const username = c.get('username');
   const admin = c.get('admin');
   const queryUser = c.req.query('username') || username;
@@ -495,6 +507,8 @@ app.get('/notice', async (c) => {
 // —— 提示 ——
 
 app.get('/hint/:uid', async (c) => {
+  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
+  if (err) return c.text(err, 400);
   const hint = hints.get(c.req.param('uid'));
   if (!hint) return c.text('Hint not found', 404);
   const plugin = pluginByPid.get(hint.pid);

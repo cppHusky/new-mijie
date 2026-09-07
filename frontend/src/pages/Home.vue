@@ -9,8 +9,9 @@
             </div>
         </div>
         <div class=" flex flex-col sm:w-1/3 w-2/3">
-            <router-link v-if="hasReadRule" to="/problems" tag="button" class="btn btn-ghost m-2 text-xl">继续游戏</router-link>
-            <router-link v-else to="/gamerule?start" tag="button" class="btn btn-ghost m-2 text-xl" @click.stop="start">开始游戏</router-link>
+            <router-link v-if="gameStarted && hasReadRule" to="/problems" tag="button" class="btn btn-ghost m-2 text-xl">继续游戏</router-link>
+            <router-link v-else-if="gameStarted" to="/gamerule?start" tag="button" class="btn btn-ghost m-2 text-xl" @click.stop="start">开始游戏</router-link>
+            <div v-else class="m-2 text-lg opacity-70">游戏未开始，开始时间：{{ gameStartTime || '未定' }}</div>
             <router-link to="/gamerule" tag="button" class="btn btn-ghost m-2 text-xl">游戏规则</router-link>
             <router-link to="/about" tag="button" class="btn btn-ghost m-2 text-xl">关于</router-link>
         </div>
@@ -19,17 +20,20 @@
   
 <script setup>
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
-import { api } from '@/tools/api'
+import { ref, computed } from 'vue'
+import { user, refreshGameStatus } from '@/tools/bus'
 import { title } from '@/constants'
 const router = useRouter()
 const hasReadRule = ref(false)
+const gameStarted = computed(() => user.gameStarted?.value ?? false)
+const gameStartTime = computed(() => user.gameStartTime?.value ?? '')
 if (localStorage.getItem('hasReadRule')) {
     hasReadRule.value=true;
 }
 function start() {
     router.push('/gamerule?start');
 }
+refreshGameStatus()
 </script>
   
 <style scoped>
