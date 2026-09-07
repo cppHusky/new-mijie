@@ -28,7 +28,7 @@
                         <span v-else class="kind-emoji">{{ KIND_ICON[t.kind] || '' }}</span>
                     </div>
                     <div v-if="won" class="overlay won">🏖️ 你抵达了大陆！<br />恭喜通关</div>
-                    <div v-else-if="dead" class="overlay dead">☠️ {{ deadCause }}<br />点击下方「再试一次」重新开始</div>
+                    <div v-else-if="dead" class="overlay dead">☠️ {{ deadCause }}<br />刷新页面可以重新开始</div>
                     <div v-else-if="wash" class="overlay wash">🌊 你被冲到了远处……</div>
                 </div>
             </div>

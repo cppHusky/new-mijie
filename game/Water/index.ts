@@ -489,7 +489,7 @@ export default createPlugin({
 			const state = ctx.gameStorage.get<State>("state");
 			if (!state) return { ok: false, reason: "尚未开始游戏，请刷新页面重试" };
 			if (state.won) return { ok: false, reason: "你已经到达了大陆" };
-			if (state.dead) return { ok: false, reason: "你已经沉入大海，请点击「再试一次」重新开始" };
+			if (state.dead) return { ok: false, reason: "你已经沉入大海，请刷新页面重新开始" };
 			const dir = data?.dir;
 			if (typeof dir !== "number" || !Number.isInteger(dir) || dir < 0 || dir > 5) {
 				return { ok: false, reason: "无效的方向" };
@@ -530,7 +530,7 @@ export default createPlugin({
 			const state = ctx.gameStorage.get<State>("state");
 			if (!state) return { ok: false, reason: "尚未开始游戏，请刷新页面重试" };
 			if (state.won) return { ok: false, reason: "你已经到达了大陆" };
-			if (state.dead) return { ok: false, reason: "你已经沉入大海，请点击「再试一次」重新开始" };
+			if (state.dead) return { ok: false, reason: "你已经沉入大海，请刷新页面重新开始" };
 			const id = data?.item;
 			if (typeof id !== "string" || !Object.hasOwn(ITEM_INFO, id)) {
 				return { ok: false, reason: "无效的道具" };
