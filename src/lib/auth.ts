@@ -11,7 +11,7 @@ export const requireAuth = createMiddleware<{ Bindings: Env; Variables: Variable
     }
     const payload = await verifyToken(c.env.JWT_SECRET, header.slice(7));
     if (!payload) {
-      return c.text('登录过期，请重新登陆', 401);
+      return c.text('登录过期，请重新登录', 401);
     }
     const user = await c.env.DB.prepare('SELECT banned FROM users WHERE username = ?')
       .bind(payload.sub)
