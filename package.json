@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "frontend:install":"pnpm --dir frontend install --frozen-lockfile",
+    "install:all":"pnpm install && pnpm frontend:install",
+    "prebuild":"pnpm frontend:install",
     "postinstall": "pnpm gen",
     "gen": "node scripts/gen-manifest.mjs",
     "dev": "pnpm gen && wrangler dev",
