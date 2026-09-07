@@ -40,6 +40,12 @@ export default createPlugin({
 		return "hidden";
 	},
 	inputs:true,
+	scores:[{
+			id:"Shirt.inputPence",
+			desc:"不审题",
+			points:-5,
+			when:async(ans,_)=>parseFloat(ans)==915,
+	}],
 	checker:async(ans,_)=>parseFloat(ans)===9.15,
 	files:[
 		{
