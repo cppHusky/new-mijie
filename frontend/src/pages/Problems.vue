@@ -16,8 +16,14 @@
             <div class="flex items-center min-w-0">
               <span class="badge badge-outline mr-3 font-mono shrink-0">{{ p.label ?? '???' }}</span>
               <span class="text-xl font-bold truncate">{{ p.state === 'visible' ? p.name : '???' }}</span>
+              <button v-if="p.unlocked && p.conditions?.length" class="btn btn-ghost btn-circle btn-xs tooltip ml-1"
+                :data-tip="condOpen[p.pid] ? '收起解锁条件' : '查看解锁条件'"
+                :class="condOpen[p.pid] ? 'btn-active' : ''" @click="toggleCond(p.pid)">
+                <font-awesome-icon :icon="['fas', 'angles-down']" class="transition-transform duration-200"
+                  :class="condOpen[p.pid] ? 'rotate-180' : ''" />
+              </button>
             </div>
-            <div class="flex items-center gap-4 shrink-0">
+            <div class="flex items-center gap-2 shrink-0">
               <span v-if="p.passed" class="text-success">
                 <font-awesome-icon :icon="['fas', 'circle-check']" class="mr-1" />已通过
               </span>
@@ -40,16 +46,13 @@
             </button>
           </div>
           <div v-else class="mt-3">
-            <details v-if="p.conditions?.length" class="mt-1">
-              <summary class="btn btn-ghost btn-xs">查看解锁条件</summary>
-              <ul class="mt-2">
-                <li v-for="(cond, i) in p.conditions" :key="i" class="flex items-center mt-1">
-                  <font-awesome-icon :icon="['fas', cond.met ? 'circle-check' : 'circle-xmark']"
-                    :class="cond.met ? 'text-success' : 'text-error'" class="mr-2 shrink-0" />
-                  <span :class="{ 'opacity-60': cond.met }">{{ cond.desc }}</span>
-                </li>
-              </ul>
-            </details>
+            <ul v-if="condOpen[p.pid]" class="mb-3">
+              <li v-for="(cond, i) in p.conditions" :key="i" class="flex items-center mt-1">
+                <font-awesome-icon :icon="['fas', cond.met ? 'circle-check' : 'circle-xmark']"
+                  :class="cond.met ? 'text-success' : 'text-error'" class="mr-2 shrink-0" />
+                <span :class="{ 'opacity-60': cond.met }">{{ cond.desc }}</span>
+              </li>
+            </ul>
             <router-link :to="'/game/' + p.pid" class="btn btn-outline btn-sm">进入题目</router-link>
           </div>
         </div>
@@ -64,7 +67,7 @@
 
 <script setup>
 import TitleCard from '@/components/TitleCard.vue';
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { api } from '@/tools/api'
 import { useRouter } from 'vue-router'
 import { user } from '@/tools/bus'
@@ -74,6 +77,11 @@ const router = useRouter()
 const problems = ref([])
 const loading = ref(true)
 const unlocking = ref('')
+const condOpen = reactive({})
+
+function toggleCond(pid) {
+  condOpen[pid] = !condOpen[pid]
+}
 
 if (!user.login.value) {
   localStorage.setItem('afterLogin', router.currentRoute.value.fullPath)
