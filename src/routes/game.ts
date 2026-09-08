@@ -359,31 +359,6 @@ app.post('/problem/:pid/server', async (c) => {
   });
 });
 
-// —— 已通过题重看 after_solve ——
-
-app.get('/skipProblem/:pid', async (c) => {
-  const pid = c.req.param('pid');
-  const err = checkGameWindow(await getGameConfig(c.env.DB), c.get('admin') >= 1, c.env.TIMEZONE);
-  if (err) return c.text(err, 400);
-  const plugin = pluginByPid.get(pid);
-  if (!plugin) return problemNotFound(c, pid);
-  const state = await loadUserState(c.env.DB, c.get('username'));
-  if (!state.gameProcess.passed.has(pid)) {
-    return c.text('You have not passed this problem', 400);
-  }
-  const record = await c.env.DB.prepare(
-    'SELECT msg FROM records WHERE username = ? AND pid = ? AND passed = 1 ORDER BY created_at DESC LIMIT 1'
-  )
-    .bind(c.get('username'), pid)
-    .first<{ msg: string | null }>();
-  return c.json({
-    passed: true,
-    msg: record?.msg ?? '',
-    after_solve: plugin.description.after_solve,
-    myScore: state.gameProcess.scores.get(pid) ?? 0,
-  });
-});
-
 // —— 排行榜（passed_count desc, total_points desc, last_progress_at asc；并列同名次） ——
 
 app.get('/rank', async (c) => {

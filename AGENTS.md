@@ -437,7 +437,6 @@ type Context = {
 | GET | `/api/problem/:pid` | 题目详情（未解锁 404）+ 得分任务清单；潜伏题在此写 visited_at |
 | POST | `/api/problem/:pid` | 提交答案（checker + award 流水线） |
 | POST | `/api/problem/:pid/server` | 交互事件（award 流水线） |
-| GET | `/api/skipProblem/:pid` | 已通过题重看 after_solve |
 | GET | `/api/rank` | passed_count desc, total_points desc, last_progress_at asc；并列同名次 |
 | GET | `/api/record` | 提交记录（分页/过滤，沿袭） |
 | GET | `/api/submitted_problems` | 各题提交次数（沿袭） |

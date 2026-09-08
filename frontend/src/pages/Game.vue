@@ -85,18 +85,12 @@
                     <div class="flex flex-col mx-auto" v-if="show_turnstile">
                         <div id="cfTurnstile" class="cf-turnstile mt-5" data-action="submit_problem"></div>
                     </div>
-                    <div class="grid gap-4 mt-5"
-                        :class="{ 'grid-cols-2': passed && inputs !== false, 'grid-cols-1': !passed || inputs === false }">
+                    <div class="grid gap-4 mt-5">
                         <button class="submit btn btn-outline group" v-if="inputs !== false" @click="submit"
                             :disabled="loading" style="border-color: hsl(var(--bc) / 0.2)">
                             <span class="loading loading-dots loading-xs" v-if="loading"></span>
                             提交
                             <Shortcut :disabled="loading" />
-                        </button>
-                        <button v-if="passed" class="submit btn btn-outline" @click="skip" :disabled="loading2"
-                            style="border-color: hsl(var(--bc) / 0.2)">
-                            <span class="loading loading-dots loading-xs" v-if="loading2"></span>
-                            跳过
                         </button>
                     </div>
                 </template>
@@ -186,7 +180,6 @@ let lastSubmit = null
 const hintr = localStorage.getItem('hints')
 const hints = ref([])
 const show_turnstile = ref(false)
-const loading2 = ref(false)
 let initProblem = null
 const problemKey = ref(0)
 function retry() {
@@ -375,35 +368,6 @@ async function submit({ token }) {
         }
         loading.value = false
         console.error(err)
-    }
-}
-
-async function skip() {
-    records.value = []
-    loading2.value = true
-    showDown.value = false
-    lastSubmit = new Date()
-    try {
-        const res = await api('/api/skipProblem/' + router.currentRoute.value.params.pid)
-        await sleep(500 - new Date().getTime() + lastSubmit.getTime())
-        records.value.unshift(res)
-        if (res.passed) gameState.value = 2
-        if (res.percent != undefined && res.percent != null) percent.value = res.percent
-        if (res.after_solve) solved_description.value = {
-            pid: router.currentRoute.value.params.pid,
-            ...res.after_solve
-        }
-        nextTick(() => {
-            if (!checkIfResultInViewport()) showDown.value = true
-        })
-        loading2.value = false
-    } catch (err) {
-        console.log(err)
-        if (err.status == 401) {
-            localStorage.setItem('afterLogin', router.currentRoute.value.fullPath)
-            router.push('/login')
-        }
-        loading2.value = false
     }
 }
 
