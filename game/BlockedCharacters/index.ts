@@ -76,9 +76,10 @@ export default createPlugin({
 		const wind=ctx.gameProcess.passed.has("Wind")?1:0;
 		const earth=ctx.gameProcess.passed.has("Earth")?1:0;
 		const total=water+fire+wind+earth;
-		if(total <=3)
+		const passed=normalize(ans)===normalize(origin);
+		if(total <=3&&passed)
 			ctx.msg(`你在只得到 ${total}/4 的内容时，就成功复现出了原文！`);
-		return normalize(ans)===normalize(origin);
+		return passed;
 	},
 	captcha:true,
 	record:true,
