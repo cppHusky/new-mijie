@@ -15,7 +15,7 @@ export default createPlugin({
 		},
 		{
 			type:"points",
-			atLeast:50,
+			atLeast:60,
 		},
 	],
 	accessible:{
