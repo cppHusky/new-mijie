@@ -26,7 +26,7 @@ export default createPlugin({
     let inputTime=ctx.gameStorage.get<number>("GuessNumber.time")??0;
     let target=ctx.gameStorage.get<number>("GuessNumber.target");
     if(!target){
-      target=1+Math.floor(99.9999*Math.random());
+      target=1+Math.floor(98.9999*Math.random());
       ctx.gameStorage.set("GuessNumber.target",target);
     }
     const input=parseFloat(ans);
@@ -44,7 +44,7 @@ export default createPlugin({
         }
       }
       ctx.gameStorage.set("GuessNumber.time",0);
-      ctx.gameStorage.set("GuessNumber.target",1+Math.floor(99.9999*Math.random()));
+      ctx.gameStorage.set("GuessNumber.target",1+Math.floor(98.9999*Math.random()));
       ctx.msg(`题目已重置`);
       return true;
     }
@@ -56,7 +56,7 @@ export default createPlugin({
     }
     if(inputTime>=7){
       ctx.gameStorage.set("GuessNumber.time",0);
-      ctx.gameStorage.set("GuessNumber.target",1+Math.floor(99.9999*Math.random()));
+      ctx.gameStorage.set("GuessNumber.target",1+Math.floor(98.9999*Math.random()));
       ctx.msg(`输入 7 次还未猜出，本轮作废。题目已重置`);
     }
     return false;
