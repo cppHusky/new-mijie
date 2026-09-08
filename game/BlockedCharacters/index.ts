@@ -75,6 +75,8 @@ export default createPlugin({
 		console.log(normalize(origin));
 		return normalize(ans)===normalize(origin);
 	},
+	captcha:true,
+	record:true,
 	server:(app)=>{
 		app.on("refresh",(_,ctx)=>{
 			const water=ctx.gameProcess.passed.has("Water");

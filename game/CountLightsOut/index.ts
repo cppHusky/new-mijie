@@ -55,4 +55,5 @@ export default createPlugin({
 			return cells.reduce((acc, cur) => acc + (cur ? 1 : 0), 0)
 		})
 	},
+	record:true,
 });

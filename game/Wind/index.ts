@@ -164,4 +164,5 @@ export default createPlugin({
 			return snapshot(state, ctx.gameProcess.passed.has("Fire"));
 		});
 	},
+	record:true,
 });

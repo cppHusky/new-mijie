@@ -46,6 +46,8 @@ export default createPlugin({
 			points:-5,
 			when:async(ans,_)=>parseFloat(ans)==915,
 	}],
+	captcha:true,
+	record:true,
 	checker:async(ans,_)=>parseFloat(ans)===9.15,
 	files:[
 		{

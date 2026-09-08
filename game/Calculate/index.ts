@@ -19,5 +19,7 @@ export default createPlugin({
 		},
 	],
 	inputs:true,
+	captcha:true,
+	record:true,
 	checker:async(ans,_)=>ans.trim()==="0.3",
 });

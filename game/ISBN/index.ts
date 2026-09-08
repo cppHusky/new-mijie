@@ -27,5 +27,7 @@ export default createPlugin({
 	inputs:[
 		{name:"x",placeholder:"地名"},
 	],
+	captcha:true,
+	record:true,
 	checker:async(ans,_)=>ans.x.trim()==="长安",
 });

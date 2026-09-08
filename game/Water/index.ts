@@ -564,4 +564,5 @@ export default createPlugin({
 			return snapshot(state, log);
 		});
 	},
+	record:true,
 });

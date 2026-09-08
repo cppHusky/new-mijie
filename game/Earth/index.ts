@@ -148,4 +148,5 @@ export default createPlugin({
 			return { ok: false, reset: true, error };
 		});
 	},
+	record:true,
 });

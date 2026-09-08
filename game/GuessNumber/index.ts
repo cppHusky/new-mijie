@@ -61,5 +61,7 @@ export default createPlugin({
     }
     return false;
   },
+  captcha:true,
+  record:true,
   inputs:true,
 });

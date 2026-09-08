@@ -139,4 +139,5 @@ export default createPlugin({
 			return snap(s);
 		});
 	},
+	record:true,
 });
