@@ -238,7 +238,7 @@ function ride(state: State, log: string[], steps: number, who: string, depth: nu
 	arrive(state, log, depth + 1, ctx);
 }
 
-/** 随机甩飞：落点避开鲨鱼与定居点，防止摔死/白嫖通关 */
+/** 随机甩飞 */
 function dump(state: State, log: string[], fallbackLog: string, depth: number, ctx: ServerContext) {
 	const ox = state.pos.q, oy = state.pos.r;
 	for (let i = 0; i < 16; i++) {
@@ -247,8 +247,6 @@ function dump(state: State, log: string[], fallbackLog: string, depth: number, c
 		const steps = DUMP_MIN + (Math.floor(h / 6) % (DUMP_MAX - DUMP_MIN + 1));
 		const nq = ox + DIR_VECTORS[d][0] * steps;
 		const nr = oy + DIR_VECTORS[d][1] * steps;
-		if (isLandPos(state, nq, nr)) continue;
-		if (tileKind(state, nq, nr) === "shark") continue;
 		state.prevPos = { q: ox, r: oy };
 		state.pos = { q: nq, r: nr };
 		state.path?.push({ ...state.pos });
