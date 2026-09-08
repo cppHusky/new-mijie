@@ -99,11 +99,9 @@ app.get('/problems', async (c) => {
       myScore: state.gameProcess.scores.get(p.pid) ?? 0,
     };
     if (visibility === 'visible') entry.name = p.name;
-    if (!unlocked) {
-      const u = evalUnlock(p.unlock, base, tz, displayName);
-      entry.conditions = u.conditions;
-      entry.canUnlock = u.canUnlock;
-    }
+    const u = evalUnlock(p.unlock, base, tz, displayName);
+    entry.conditions = u.conditions;
+    entry.canUnlock = u.canUnlock;
     list.push(entry);
   }
   return c.json({ problems: list });

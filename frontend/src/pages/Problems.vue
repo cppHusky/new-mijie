@@ -40,6 +40,16 @@
             </button>
           </div>
           <div v-else class="mt-3">
+            <details v-if="p.conditions?.length" class="mt-1">
+              <summary class="btn btn-ghost btn-xs">查看解锁条件</summary>
+              <ul class="mt-2">
+                <li v-for="(cond, i) in p.conditions" :key="i" class="flex items-center mt-1">
+                  <font-awesome-icon :icon="['fas', cond.met ? 'circle-check' : 'circle-xmark']"
+                    :class="cond.met ? 'text-success' : 'text-error'" class="mr-2 shrink-0" />
+                  <span :class="{ 'opacity-60': cond.met }">{{ cond.desc }}</span>
+                </li>
+              </ul>
+            </details>
             <router-link :to="'/game/' + p.pid" class="btn btn-outline btn-sm">进入题目</router-link>
           </div>
         </div>
