@@ -28,7 +28,7 @@ export default createPlugin({
 					"Dialling",
 					"Calculate",
 				].map(condition?showName:nameOf).join("》《");
-					return `在《${names}》中通过任意 2 关`+condition?"（请自行寻找隐藏的题目）":"";
+				return `在《${names}》中通过任意 2 关`;
 			},
 		},
 	],
