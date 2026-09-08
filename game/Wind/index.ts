@@ -113,7 +113,7 @@ export default createPlugin({
 	},
 	scores:[
 		{ id:"Wind.in12", desc:"在 12 回合内通过本关", points:5 },
-		{ id:"Wind.in3", desc:"在 3 回合内通过本关", points:5 },
+		{ id:"Wind.in5", desc:"在 5 回合内通过本关", points:5 },
 	],
 	inputs:false,
 	server:(app)=>{
@@ -136,7 +136,7 @@ export default createPlugin({
 			const won = isWin(state.boxes);
 			if (won) {
 				if (state.turn <= 12) ctx.award("Wind.in12");
-				if (state.turn <= 3) ctx.award("Wind.in3");
+				if (state.turn <= 5) ctx.award("Wind.in5");
 				ctx.pass(`在第 ${state.turn} 回合，你将红箱子吹到了绿箱子的右侧`);
 			}
 			ctx.gameStorage.set("state", state);
@@ -160,6 +160,7 @@ export default createPlugin({
 			if (at < 0) return { ok: false, reason: "这里没有树干" };
 			state.trunks.splice(at, 1);
 			state.igniteUsed++;
+			state.turn++;
 			ctx.gameStorage.set("state", state);
 			return snapshot(state, ctx.gameProcess.passed.has("Fire"));
 		});
