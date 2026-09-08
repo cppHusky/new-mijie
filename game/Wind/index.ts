@@ -137,7 +137,7 @@ export default createPlugin({
 			if (won) {
 				if (state.turn <= 12) ctx.award("Wind.in12");
 				if (state.turn <= 3) ctx.award("Wind.in3");
-				ctx.pass(`第 ${state.turn} 回合，红箱子移动到了绿箱子的右侧`);
+				ctx.pass(`在第 ${state.turn} 回合，你将红箱子吹到了绿箱子的右侧`);
 			}
 			ctx.gameStorage.set("state", state);
 			return { ...snapshot(state, ctx.gameProcess.passed.has("Fire")), won };

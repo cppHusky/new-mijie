@@ -33,7 +33,7 @@ export default createPlugin({
     inputTime++;
     ctx.gameStorage.set("GuessNumber.time",inputTime);
     if(Math.abs(input-target)<1e-5){
-      ctx.msg(`对了`);
+      ctx.msg(`对了，用时 ${inputTime} 回合`);
       if(inputTime <=5){
         ctx.award("GuessNumber.in5times");
         if(inputTime <=3){

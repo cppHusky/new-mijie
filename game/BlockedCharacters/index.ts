@@ -70,9 +70,14 @@ export default createPlugin({
 		points:10,
 	}],
 	inputs:true,
-	checker:async(ans)=>{
-		console.log(normalize(ans));
-		console.log(normalize(origin));
+	checker:async(ans,ctx)=>{
+		const water=ctx.gameProcess.passed.has("Water")?1:0;
+		const fire=ctx.gameProcess.passed.has("Fire")?1:0;
+		const wind=ctx.gameProcess.passed.has("Wind")?1:0;
+		const earth=ctx.gameProcess.passed.has("Earth")?1:0;
+		const total=water+fire+wind+earth;
+		if(total <=3)
+			ctx.msg(`你在只得到 ${total}/4 的内容时，就成功复现出了原文！`);
 		return normalize(ans)===normalize(origin);
 	},
 	captcha:true,
