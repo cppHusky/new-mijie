@@ -517,11 +517,10 @@ export default createPlugin({
 				}
 			}
 			if (!state.dead) {
-				if (state.turn >= 30){
+				if (state.turn === 30)
 					ctx.award("Wind.30Turns");
-					if (state.turn >= 60)
-						ctx.award("Wind.60Turns");
-				}
+				if (state.turn === 60)
+					ctx.award("Wind.60Turns");
 			}
 			ctx.gameStorage.set("state", state);
 			return snapshot(state, log, cost);
