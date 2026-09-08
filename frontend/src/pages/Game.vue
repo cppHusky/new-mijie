@@ -308,6 +308,16 @@ function notifyAwarded(awarded) {
     if (awarded?.length) user.update()
 }
 
+function notifyReAchieved(reAchieved) {
+    for (const a of reAchieved || []) {
+        notificationManager.add({
+            message: `再次达成【${a.desc}】`,
+            type: 'info',
+            time: 4000,
+        })
+    }
+}
+
 async function setResult(res) {
     if (res.turnstile) {
         toggle_turnstile(submit)
@@ -318,6 +328,7 @@ async function setResult(res) {
     else await sleep(100)
     records.value.unshift(res)
     notifyAwarded(res.awarded)
+    notifyReAchieved(res.reAchieved)
     if (res.passed) {
         gameState.value = 2
         passed.value = true
@@ -407,10 +418,12 @@ async function pluginApi(event, data, admin) {
             passed: result.passed,
             msg: result.msg || '',
             awarded: result.awarded,
+            reAchieved: result.reAchieved,
             after_solve: result.after_solve
         })
     } else {
         notifyAwarded(result.awarded)
+        notifyReAchieved(result.reAchieved)
     }
     if (result.percent != undefined && result.percent != null) percent.value = result.percent
     return result.res

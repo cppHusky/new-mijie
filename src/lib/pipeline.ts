@@ -9,16 +9,24 @@ export interface AwardedItem {
 /**
  * ctx.award 原语：仅登记到 pending（请求结束统一落库）。
  * 对已入账（score_events）或已 pending 的条件幂等；未定义的 id 视为插件 bug，抛错。
+ * 已入账的条件再次达成时登记到 reAchieved（不重复计分，仅用于前端提醒）。
  */
 export function createAward(
   plugin: RegisteredPlugin,
   alreadyAwarded: ReadonlySet<string>,
-  pending: AwardedItem[]
+  pending: AwardedItem[],
+  reAchieved: AwardedItem[]
 ): (id: string) => void {
   return (id: string) => {
     const cond = plugin.scores?.find((s) => s.id === id);
     if (!cond) throw new Error(`插件 ${plugin.pid} 未定义得分条件「${id}」`);
-    if (alreadyAwarded.has(id) || pending.some((p) => p.id === id)) return;
+    if (alreadyAwarded.has(id)) {
+      if (!reAchieved.some((r) => r.id === id)) {
+        reAchieved.push({ id: cond.id, desc: cond.desc, points: cond.points });
+      }
+      return;
+    }
+    if (pending.some((p) => p.id === id)) return;
     pending.push({ id, desc: cond.desc, points: cond.points });
   };
 }

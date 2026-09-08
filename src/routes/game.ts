@@ -215,6 +215,7 @@ app.post('/problem/:pid', async (c) => {
   const storage = await loadGameStorage(c.env.DB, username, pid);
   const alreadyAwarded = await awardedIds(c.env.DB, username, pid);
   const pending: AwardedItem[] = [];
+  const reAchieved: AwardedItem[] = [];
   let msg = '';
   let content = '';
   const ctx: Context = buildContext({
@@ -224,7 +225,7 @@ app.post('/problem/:pid', async (c) => {
     gameStorage: storage,
     msg: (s) => (msg += s + '\n'),
     content: (s) => (content += s),
-    award: createAward(plugin, alreadyAwarded, pending),
+    award: createAward(plugin, alreadyAwarded, pending, reAchieved),
   });
 
   let passed: boolean;
@@ -235,7 +236,7 @@ app.post('/problem/:pid', async (c) => {
     return c.text('checker error, please contact admin', 500);
   }
 
-  await evalDeclarativeScores(plugin, ans, ctx, passed, alreadyAwarded, pending);
+  await evalDeclarativeScores(plugin, ans, ctx, passed, alreadyAwarded, pending, reAchieved);
 
   const result = await persistOutcome({
     db: c.env.DB,
@@ -258,6 +259,7 @@ app.post('/problem/:pid', async (c) => {
     msg: msg || undefined,
     content: content || undefined,
     awarded: result.awarded.map(({ id, desc, points }) => ({ id, desc, points })),
+    reAchieved: reAchieved.map(({ id, desc, points }) => ({ id, desc, points })),
     after_solve: result.newlyPassed ? plugin.description.after_solve : undefined,
     percent: plugin.showPercent === false ? undefined : await getPercent(c.env.DB, pid),
   });
@@ -285,6 +287,7 @@ app.post('/problem/:pid/server', async (c) => {
   const storage = await loadGameStorage(c.env.DB, username, pid);
   const alreadyAwarded = await awardedIds(c.env.DB, username, pid);
   const pending: AwardedItem[] = [];
+  const reAchieved: AwardedItem[] = [];
   let passed: boolean | undefined;
   let message = '';
   let content = '';
@@ -295,7 +298,7 @@ app.post('/problem/:pid/server', async (c) => {
     gameStorage: storage,
     msg: (s) => (message += s + '\n'),
     content: (s) => (content += s),
-    award: createAward(plugin, alreadyAwarded, pending),
+    award: createAward(plugin, alreadyAwarded, pending, reAchieved),
   });
   const { msg: _msg, content: _content, ...baseRest } = base;
   const sctx: ServerContext = {
@@ -324,7 +327,7 @@ app.post('/problem/:pid/server', async (c) => {
   }
 
   // 声明式兜底评估（server 事件以 data 作为 ans）
-  await evalDeclarativeScores(plugin, data, base, passed === true, alreadyAwarded, pending);
+  await evalDeclarativeScores(plugin, data, base, passed === true, alreadyAwarded, pending, reAchieved);
 
   const judged = passed !== undefined;
   const result = await persistOutcome({
@@ -349,6 +352,7 @@ app.post('/problem/:pid/server', async (c) => {
     msg: message || undefined,
     content: content || undefined,
     awarded: result.awarded.map(({ id, desc, points }) => ({ id, desc, points })),
+    reAchieved: reAchieved.map(({ id, desc, points }) => ({ id, desc, points })),
     after_solve: result.newlyPassed ? plugin.description.after_solve : undefined,
     percent:
       judged && plugin.showPercent !== false ? await getPercent(c.env.DB, pid) : undefined,
@@ -532,20 +536,28 @@ async function awardedIds(db: D1Database, username: string, pid: string): Promis
   return new Set((rows.results ?? []).map((r) => r.score_id));
 }
 
-/** 声明式糖：每次提交/事件后兜底评估未达成的 scores[].when */
+/** 声明式糖：每次提交/事件后兜底评估 scores[].when；已入账条件再次达成时登记 reAchieved（不重复计分） */
 async function evalDeclarativeScores(
   plugin: RegisteredPlugin,
   ans: unknown,
   ctx: Context,
   passed: boolean,
   alreadyAwarded: ReadonlySet<string>,
-  pending: AwardedItem[]
+  pending: AwardedItem[],
+  reAchieved: AwardedItem[]
 ): Promise<void> {
   for (const s of plugin.scores ?? []) {
-    if (!s.when || alreadyAwarded.has(s.id) || pending.some((p) => p.id === s.id)) continue;
+    if (!s.when) continue;
+    if (pending.some((p) => p.id === s.id)) continue;
     try {
       if (await s.when(ans, ctx, { passed })) {
-        pending.push({ id: s.id, desc: s.desc, points: s.points });
+        if (alreadyAwarded.has(s.id)) {
+          if (!reAchieved.some((r) => r.id === s.id)) {
+            reAchieved.push({ id: s.id, desc: s.desc, points: s.points });
+          }
+        } else {
+          pending.push({ id: s.id, desc: s.desc, points: s.points });
+        }
       }
     } catch (e) {
       console.error(`[scores] ${plugin.pid} 条件 ${s.id} 评估异常：`, e);
