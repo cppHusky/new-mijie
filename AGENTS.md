@@ -29,6 +29,7 @@ puzzle-framework 是一个解谜游戏（Puzzle Hunt）框架，灵感与大部�
 | 7 | label | 新增 `label?: string`，兼任题目列表排序键与幽灵行标识，全行显示 |
 | 8 | noPrize | 不实现；QQ 号仅供管理员在用户列表人工核对 |
 | 9 | 管理员隐藏 | 沿用 mijie `hidden` 机制：排行榜/通过率的排除口径**只看 `hidden`，与 admin 身份无关**；管理员在获得权限时 `hidden` **默认置 1**（首个注册管理员、被授予 admin 时），可在用户列表手动取消 |
+| 10 | 回顾模式 | 由 `vars.REVIEW_MODE`（`"true"`/`"1"`）开启：全局比赛起止时间不生效（题目内 `time` 条件保留原语义）；关闭排行榜/通过率与 rank 广播；玩家可凭密码硬删除自己账号（`records`/`score_events`/`problem_state`/`game_storage`/`users` 五表，最后一名管理员受保护）；公开 `GET /api/mode` 供前端感知 |
 
 ## 领域模型：四个正交维度
 
@@ -423,7 +424,7 @@ type Context = {
 
 ## 10. API 一览（新架构）
 
-公开：`GET /api/ping` · `GET /api/keys`（turnstile site key）· `POST /api/register` · `POST /api/login` · `GET /api/game-config/:option`。
+公开：`GET /api/ping` · `GET /api/keys`（turnstile site key）· `GET /api/mode`（回顾模式开关）· `POST /api/register` · `POST /api/login` · `GET /api/game-config/:option`。
 
 登录后：
 
@@ -432,6 +433,7 @@ type Context = {
 | GET | `/api/me` | 当前用户摘要（username/admin/qq/通关数/总分） |
 | POST | `/api/change-password` | 凭旧密码改密 |
 | POST | `/api/change-qq` | 设置/修改 QQ |
+| DELETE | `/api/account` | 删除自己的账号（仅回顾模式；凭密码，硬删全部数据） |
 | GET | `/api/problems` | 题目列表：可见性、解锁条件逐项 met、canUnlock、我的得分/通过标记 |
 | POST | `/api/problems/:pid/unlock` | 服务端重估条件，全满足则持久化解锁 |
 | GET | `/api/problem/:pid` | 题目详情（未解锁 404）+ 得分任务清单；潜伏题在此写 visited_at |
@@ -499,6 +501,7 @@ pnpm deploy              # gen + 前端构建 + wrangler deploy（首次需先�
 - [x] **P4 周边**：公告 + RealtimeHub DO（WebSocket 广播）、admin 后台、file 服务（rawAssets + R2 回退）、Rate Limiting + Turnstile 回退
 - [x] **P5 移植验证**：3 道 mijie 题（digitalcircuit 静态 checker+gameStorage、countlightsout server+全亮 award、besiegewithoutassault mdv 交互+60 阶段分+passCount 解锁）
 - [x] **P6 交付**：build + deploy 全流程验证（已上线）、README 部署指南
+- [x] **P7 回顾模式**：`vars.REVIEW_MODE` 开关；解除全局比赛时间限制、关闭排行榜/通过率与 rank 广播、凭密码删除账号（最后一名管理员保护）
 
 ## 15. 后备想法（未拍板，暂不实现）
 

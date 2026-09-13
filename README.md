@@ -49,6 +49,16 @@ pnpm deploy
 
 部署完成后访问站点注册账号，**首个注册用户自动成为超级管理员**（admin=2），可在 `/admin` 配置比赛时间/规则/关于，在 `/users` 管理用户。
 
+### 回顾模式
+
+在 `wrangler.jsonc` 的 `vars` 中把 `REVIEW_MODE` 置为 `"true"` 后重新部署，站点即进入回顾模式：
+
+- 不受比赛开始/结束时间限制（题目内 `time` 类型解锁条件仍按真实时间求值）；
+- 关闭排行榜与通过率，玩家看不到其他玩家的数据；
+- 玩家可在「账户设置」凭密码删除自己的账号，解锁、通关、得分、题目进度与提交记录会全部清空且不可恢复；最后一名管理员受保护，不可删除。
+
+回顾模式经公开接口 `/api/mode` 下发给前端。`REVIEW_MODE` 缺省为 `"false"`，唯一来源是 `wrangler.jsonc` 的 `vars`；本地临时以回顾模式调试可用 `pnpm dev -- --var REVIEW_MODE:true`（命令行覆盖，不落盘）。
+
 ### 可选绑定
 
 - **R2 大附件**：文本题目资产（md/vue/ts 等，≤256KB）随 Worker 打包；更大的二进制附件放 R2——创建 bucket 并在 `wrangler.jsonc` 配置 `"r2_buckets": [{ "binding": "R2_BUCKET", "bucket_name": "..." }]`，然后按键 `game/<题目文件夹>/<路径>` 上传（如 `wrangler r2 object put <bucket>/game/foo/problem.pdf --file problem.pdf`），`/api/file` 会在打包资产未命中时回退到 R2。

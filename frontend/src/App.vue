@@ -5,8 +5,8 @@
       首页
     </router-link>
     <div class="sm:block hidden">
-      <router-link tabindex="0" @keydown.enter="$router.push('/rank')" @click.stop="$router.push('/rank')"
-        to = '/rank'
+      <router-link v-if="!reviewMode" tabindex="0" @keydown.enter="$router.push('/rank')"
+        @click.stop="$router.push('/rank')" to = '/rank'
         class="btn btn-ghost text-lg ml-3">
         <font-awesome-icon :icon="['fas', 'ranking-star']" />
         排行榜
@@ -32,7 +32,7 @@
             功能
           </a>
           <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-300 rounded-box w-[8rem]">
-            <li>
+            <li v-if="!reviewMode">
               <router-link to="/rank">
                 <font-awesome-icon :icon="['fas', 'ranking-star']" />
                 排行榜
@@ -124,9 +124,11 @@
 import NotificationContainer from '@/components/NotificationContainer.vue'
 import notificationManager from '@/tools/notification.js'
 import { user, noticeEventListener, rankEventListener } from '@/tools/bus'
+import { reviewMode, loadMode } from '@/tools/mode'
 import { useRouter } from 'vue-router'
 import { subscribe } from './tools/subscribe'
 const router = useRouter()
+loadMode()
 const setAfterLogin = () => {
   localStorage.setItem('afterLogin', router.currentRoute.value.fullPath)
 }

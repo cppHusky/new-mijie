@@ -2,6 +2,10 @@
     <TitleCard title="管理面板" class="mb-20">
         <template #subtitle><div class="mt-10"></div></template>
         <div class="w-full flex flex-col mx-auto">
+            <div v-if="reviewMode" class="alert alert-warning mb-5">
+                <font-awesome-icon :icon="['fas', 'triangle-exclamation']" />
+                回顾模式已启用：开始/结束时间不会生效，排行榜与通过率已关闭，玩家可删除自己的账号。
+            </div>
             <label class="label">
                 <span class="label-text">开始时间</span>
             </label>
@@ -37,7 +41,9 @@
 import TitleCard from '@/components/TitleCard.vue';
 import { ref, nextTick } from 'vue' 
 import { api, apiPut } from '@/tools/api'
+import { reviewMode, loadMode } from '@/tools/mode'
 import notificationManager from '@/tools/notification.js'
+loadMode()
 const startTime = ref('')
 const endTime = ref('')
 const gamerule = ref('')

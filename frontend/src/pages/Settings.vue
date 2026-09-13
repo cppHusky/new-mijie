@@ -44,22 +44,40 @@
             </label>
             <button class="btn btn-accent" @click="changePassword" :disabled="error.length || !password.length || !password2.length || password != password2">更改密码</button>
         </div>
+        <div v-if="reviewMode"
+            class="form-control w-full max-w-xs flex flex-col m-auto mt-10 border border-error/60 rounded-box p-4">
+            <h2 class="text-lg font-bold text-error mb-2">删除账号</h2>
+            <p class="label-text">
+                删除账号会清空你的全部游戏数据，且不可恢复。
+            </p>
+            <input type="password" class="input input-bordered w-full max-w-xs mb-3" autocomplete="current-password"
+                placeholder="输入密码确认" v-model="deletePassword" />
+            <button class="btn btn-error" :disabled="!deletePassword.length || deleting" @click="deleteAccount">
+                <span class="loading loading-dots loading-xs" v-if="deleting"></span>
+                删除账号
+            </button>
+        </div>
     </TitleCard>
 </template>
 
 <script setup>
 import TitleCard from '@/components/TitleCard.vue';
 import { ref, watch, computed } from 'vue'
-import { api } from '@/tools/api'
+import { api, apiDelete } from '@/tools/api'
 import { useRouter } from 'vue-router'
 import { user } from '@/tools/bus'
+import { reviewMode, loadMode } from '@/tools/mode'
+import notificationManager from '@/tools/notification.js'
 const router = useRouter()
 const qq = ref(user.qq?.value || '')
 const oldPassword = ref('')
 const password = ref('')
 const password2 = ref('')
 const error = ref('')
+const deletePassword = ref('')
+const deleting = ref(false)
 const qqValid = computed(() => /^[1-9]\d{4,10}$/.test(qq.value))
+loadMode()
 if (!user.login.value) {
     localStorage.setItem('afterLogin', router.currentRoute.value.fullPath)
     router.replace('/login')
@@ -95,6 +113,21 @@ async function changePassword() {
         })
     } catch (err) {
         console.log(err)
+    }
+}
+async function deleteAccount() {
+    if (!window.confirm('删除账号将清空你的全部游戏数据且不可恢复，确定继续吗？')) return
+    deleting.value = true
+    try {
+        await apiDelete('/api/account', { password: deletePassword.value })
+        localStorage.clear()
+        user.update()
+        notificationManager.add({ message: '账号已删除，全部数据已清空', type: 'success' })
+        router.push('/')
+    } catch (err) {
+        console.log(err)
+    } finally {
+        deleting.value = false
     }
 }
 </script>

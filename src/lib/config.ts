@@ -1,3 +1,5 @@
+import type { Env } from '../env';
+
 export interface GameConfig {
   startTime?: string;
   endTime?: string;
@@ -45,4 +47,23 @@ export function checkGameWindow(config: GameConfig, isAdmin: boolean, timezone?:
     return '游戏已结束，无法提交。';
   }
   return null;
+}
+
+/** 回顾模式：由 vars.REVIEW_MODE 开启（"true"/"1"，大小写不敏感） */
+export function isReviewMode(env: Pick<Env, 'REVIEW_MODE'>): boolean {
+  const v = (env.REVIEW_MODE ?? '').trim().toLowerCase();
+  return v === 'true' || v === '1';
+}
+
+/**
+ * 请求级的比赛窗口校验：读取配置并求值。
+ * 回顾模式用于让玩家回顾题目，全局起止时间一律不生效。
+ */
+export async function gameWindowError(
+  env: Env,
+  isAdmin: boolean
+): Promise<string | null> {
+  if (isReviewMode(env)) return null;
+  const config = await getGameConfig(env.DB);
+  return checkGameWindow(config, isAdmin, env.TIMEZONE);
 }

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables } from '../env';
 import { plugins } from '../plugins/registry';
-import { getGameConfig, type GameConfig } from '../lib/config';
+import { getGameConfig, isReviewMode, type GameConfig } from '../lib/config';
 import { publish } from '../lib/publish';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -126,7 +126,7 @@ app.put('/user', async (c) => {
       .bind(...keys.map((k) => updates[k]), username)
       .run();
   }
-  if (banned !== undefined || hidden !== undefined) {
+  if ((banned !== undefined || hidden !== undefined) && !isReviewMode(c.env)) {
     await publish(c.env, 'rank', { uuid });
   }
   return c.json({ message: '修改成功', uuid });
@@ -144,7 +144,7 @@ app.get('/recalculate', async (c) => {
        ), 0)`
   ).run();
   const uuid = crypto.randomUUID();
-  await publish(c.env, 'rank', { uuid });
+  if (!isReviewMode(c.env)) await publish(c.env, 'rank', { uuid });
   return c.json({ message: '已重新计算', uuid });
 });
 

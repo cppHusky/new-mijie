@@ -3,7 +3,7 @@ import type { Env, Variables } from '../env';
 import { hashPassword, verifyPassword } from '../lib/password';
 import { signToken } from '../lib/jwt';
 import { verifyTurnstile } from '../lib/turnstile';
-import { getGameConfig, formatGameTime, type GameConfig } from '../lib/config';
+import { getGameConfig, formatGameTime, isReviewMode, type GameConfig } from '../lib/config';
 
 const QQ_RE = /^[1-9]\d{4,10}$/;
 
@@ -71,6 +71,11 @@ publicRoutes.get('/keys', (c) => {
   return c.json({ turnstile: c.env.TURNSTILE_KEY ?? null });
 });
 
+/** 站点运行模式（公开）；前端据此隐藏排行榜等回顾模式差异 */
+publicRoutes.get('/mode', (c) => {
+  return c.json({ review: isReviewMode(c.env) });
+});
+
 const CONFIG_OPTIONS: (keyof GameConfig)[] = ['startTime', 'endTime', 'gamerule', 'about'];
 
 publicRoutes.get('/game-config/:option', async (c) => {
@@ -95,7 +100,8 @@ authedRoutes.get('/me', async (c) => {
   if (!user) return c.text('用户不存在', 401);
   const config = await getGameConfig(c.env.DB);
   const startTime = config.startTime ?? null;
-  const started = !startTime || new Date(startTime).getTime() <= Date.now();
+  // 回顾模式用于让玩家回顾题目，不受全局比赛起止时间限制
+  const started = isReviewMode(c.env) || !startTime || new Date(startTime).getTime() <= Date.now();
   return c.json({
     username: user.username,
     admin: user.admin,
@@ -139,4 +145,39 @@ authedRoutes.post('/change-qq', async (c) => {
     .bind(qq || null, c.get('username'))
     .run();
   return c.json({ message: 'QQ 号修改成功' });
+});
+
+// —— 删除账号（仅回顾模式）：凭密码硬删除本账号全部游戏数据，不可恢复 ——
+
+authedRoutes.delete('/account', async (c) => {
+  if (!isReviewMode(c.env)) return c.text('Not Found', 404);
+  const body = await c.req.json().catch(() => ({}) as any);
+  const { password } = body;
+  if (typeof password !== 'string' || !password) {
+    return c.text('请输入密码', 400);
+  }
+  const username = c.get('username');
+  const user = await c.env.DB.prepare(
+    'SELECT password_hash, salt, admin FROM users WHERE username = ?'
+  )
+    .bind(username)
+    .first<{ password_hash: string; salt: string; admin: number }>();
+  if (!user || !(await verifyPassword(password, user.salt, user.password_hash))) {
+    return c.text('密码错误', 401);
+  }
+  if (user.admin >= 1) {
+    const admins = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM users WHERE admin >= 1')
+      .first<{ n: number }>();
+    if ((admins?.n ?? 0) <= 1) {
+      return c.text('不能删除最后一名管理员', 400);
+    }
+  }
+  await c.env.DB.batch([
+    c.env.DB.prepare('DELETE FROM records WHERE username = ?').bind(username),
+    c.env.DB.prepare('DELETE FROM score_events WHERE username = ?').bind(username),
+    c.env.DB.prepare('DELETE FROM problem_state WHERE username = ?').bind(username),
+    c.env.DB.prepare('DELETE FROM game_storage WHERE username = ?').bind(username),
+    c.env.DB.prepare('DELETE FROM users WHERE username = ?').bind(username),
+  ]);
+  return c.json({ message: '账号已删除' });
 });

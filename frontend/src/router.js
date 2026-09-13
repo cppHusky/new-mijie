@@ -2,6 +2,7 @@ import * as VueRouter from 'vue-router'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import { user, refreshGameStatus } from '@/tools/bus'
+import { reviewMode, loadMode } from '@/tools/mode'
 import notificationManager from '@/tools/notification.js'
 import { title } from '@/constants'
 
@@ -105,6 +106,12 @@ NProgress.configure({ showSpinner: false });
 router.beforeEach(async (to, from, next) => {
     if (user.admin?.value < 1 && to.meta.admin) {
         next({ path: '/404', replace: true,  })
+        return
+    }
+    // 回顾模式没有排行榜
+    await loadMode()
+    if (reviewMode.value && to.name === 'rank') {
+        next({ path: '/404', replace: true })
         return
     }
     if (to.meta.game && user.login?.value && user.admin?.value < 1) {

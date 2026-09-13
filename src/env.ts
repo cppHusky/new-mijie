@@ -4,6 +4,8 @@ export interface Env {
   DB: D1Database;
   REALTIME_HUB: DurableObjectNamespace<RealtimeHub>;
   TIMEZONE?: string;
+  /** 回顾模式开关（"true"/"1" 开启；缺省关闭），见 README「回顾模式」 */
+  REVIEW_MODE?: string;
   JWT_SECRET: string;
   TURNSTILE_KEY?: string;
   TURNSTILE_SECRET?: string;
