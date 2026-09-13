@@ -54,7 +54,7 @@
                             <font-awesome-icon :icon="['fas', s.achieved ? 'circle-check' : 'circle-xmark']" class="mr-2"
                                 :class="s.achieved ? 'text-success' : 'text-gray-500'" />{{ s.desc }}
                         </span>
-                        <span class="font-mono ml-3 shrink-0" :class="s.points >= 0 ? 'text-success' : 'text-error'">
+                        <span class="font-mono ml-3 shrink-0" :class="!s.achieved ? 'text-gray-500' : (s.points >= 0 ? 'text-success' : 'text-error')">
                             {{ s.points > 0 ? '+' : '' }}{{ s.points }} 分
                         </span>
                     </a>
