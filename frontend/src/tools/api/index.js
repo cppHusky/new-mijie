@@ -16,14 +16,32 @@ export function apiMethod(method, url, body) {
     })
       .then(async res => {
         if (res.status == 200) return res.json()
-        else {
-          notificationManager.add({
-            message: await res.text(),
-            type: 'error',
-            time: 5000,
-          })
+        const text = await res.text()
+        let data = null
+        try { data = JSON.parse(text) } catch { }
+        const message = data?.error || text
+        if (res.status == 401 && data?.action == 'logout') {
+          // 会话失效：清理本地登录态（user.login 立即变 false），
+          // 之后各页面的 401 跳转逻辑会正常进入登录页
+          const hadToken = !!localStorage.getItem('token')
+          localStorage.removeItem('token')
+          user.update()
+          if (hadToken) {
+            notificationManager.add({
+              message,
+              type: 'error',
+              time: 5000,
+            })
+          }
           reject(res)
+          return
         }
+        notificationManager.add({
+          message,
+          type: 'error',
+          time: 5000,
+        })
+        reject(res)
       }).then(res => {
         
         if (res?.token && res?.token?.length) {
@@ -79,8 +97,11 @@ export async function downloadFile(fileUrl, fileName) {
     if (localStorage.getItem('token')) headers['Authorization'] = 'Bearer ' + localStorage.getItem('token');
     const response = await fetch(fileUrl, { method: 'GET', headers: headers });
     if (!response.ok) {
+      const text = await response.text()
+      let message = text
+      try { message = JSON.parse(text)?.error || text } catch { }
       notificationManager.add({
-        message: await response.text(),
+        message,
         type: 'error',
         time: 5000,
       })
