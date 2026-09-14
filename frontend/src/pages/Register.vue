@@ -81,7 +81,7 @@ if (user.login.value) {
         message: '您已登录',
         type: 'info'
     })
-    router.replace(history.state?.back?.path || '/')
+    router.replace(history.state?.back || '/')
 }
 watch(password, () => {
     if (!password.value.length) {

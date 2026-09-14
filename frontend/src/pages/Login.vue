@@ -36,7 +36,7 @@ if (user.login.value) {
         message: '您已登录，无需重复登录',
         type: 'info'
     })
-    router.replace(history.state?.back?.path || '/')
+    router.replace(history.state?.back || '/')
 }
 const token = ref('')
 const show_turnstile = ref(false)
