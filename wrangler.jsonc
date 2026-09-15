@@ -47,6 +47,6 @@
 	"vars": {
 		"TIMEZONE": "Asia/Shanghai",
 		// 为 `true` 时启用回顾模式
-		"REVIEW_MODE": "false"
+		"REVIEW_MODE": "true"
 	}
 }
