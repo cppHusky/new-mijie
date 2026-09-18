@@ -146,37 +146,6 @@ export function validatePlugin(
     warning('accessible 为 lurking 但 unlock 非 true：未解锁无法访问，潜伏无从谈起（无意义组合）');
   }
 
-  // accessible 声明式规则形态校验
-  const VISIBILITIES = ['visible', 'ghost', 'hidden'];
-  if (
-    plugin.accessible !== undefined &&
-    typeof plugin.accessible === 'object' &&
-    plugin.accessible !== null
-  ) {
-    const a = plugin.accessible as any;
-    if (!Array.isArray(a.rules)) {
-      error('accessible 对象形态必须包含 rules 数组');
-      return null;
-    }
-    for (const [i, rule] of a.rules.entries()) {
-      if (!Array.isArray(rule?.when) || !VISIBILITIES.includes(rule?.then)) {
-        error(`accessible.rules[${i}] 必须是 { when: UnlockCondition[], then: visible|ghost|hidden }`);
-        return null;
-      }
-      for (const cond of rule.when as any[]) {
-        const shapeError = validateConditionShape(cond);
-        if (shapeError) {
-          error(`accessible.rules[${i}] 条件非法：${shapeError}`);
-          return null;
-        }
-      }
-    }
-    if (a.fallback !== undefined && !VISIBILITIES.includes(a.fallback)) {
-      error('accessible.fallback 必须是 visible|ghost|hidden');
-      return null;
-    }
-  }
-
   if (plugin.scores) {
     const ids = new Set<string>();
     for (const s of plugin.scores) {
@@ -251,16 +220,6 @@ export function referencedPids(conds: UnlockCondition[] | true | undefined): str
   return refs;
 }
 
-/** 收集 accessible 规则形态中各规则的 when 条件数组 */
-export function accessibleRuleConditions(
-  accessible: Plugin<any>['accessible']
-): UnlockCondition[][] {
-  if (accessible && typeof accessible === 'object' && Array.isArray((accessible as any).rules)) {
-    return ((accessible as any).rules as { when?: UnlockCondition[] }[]).map((r) => r.when ?? []);
-  }
-  return [];
-}
-
 function buildRegistry() {
   const issues: RegistryIssue[] = [];
   const list: RegisteredPlugin[] = [];
@@ -296,18 +255,14 @@ function buildRegistry() {
     }
   }
 
-  // 解锁条件与可见性规则引用的 pid 必须存在
+  // 解锁条件引用的 pid 必须存在
   for (const p of byPid.values()) {
-    const refs = [
-      ...referencedPids(p.unlock),
-      ...accessibleRuleConditions(p.accessible).flatMap((conds) => referencedPids(conds)),
-    ];
-    for (const ref of refs) {
+    for (const ref of referencedPids(p.unlock)) {
       if (!byPid.has(ref)) {
         issues.push({
           level: 'error',
           folder: p.folder,
-          message: `unlock/accessible 引用了不存在的 pid「${ref}」`,
+          message: `unlock 引用了不存在的 pid「${ref}」`,
         });
       }
     }

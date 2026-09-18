@@ -41,24 +41,12 @@ export interface AccessContext extends UnlockContext {
   met(cond: UnlockCondition): boolean;
 }
 
-/** 声明式可见性规则：when 全部满足（AND）时取 then */
-export type AccessibleRule = {
-  when: UnlockCondition[];
-  then: Visibility;
-};
-
 export type Accessible =
   | 'always'     // 永远可见
   | 'never'      // 永不显示（但已解锁时可经 URL 访问）
   | 'suspended'  // 空悬：已解锁→visible，未解锁→ghost（默认值）
   | 'lurking'    // 潜伏：访问前 hidden，访问后 visible
-  | ((ctx: AccessContext) => Visibility)
-  | {
-      /** 按序匹配，首个 when 全满足的规则生效 */
-      rules: AccessibleRule[];
-      /** 全部落空时的可见性，缺省 'hidden' */
-      fallback?: Visibility;
-    };
+  | ((ctx: AccessContext) => Visibility);
 
 // —— 解锁（四维度之二，持久化） ——
 

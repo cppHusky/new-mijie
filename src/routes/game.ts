@@ -57,8 +57,7 @@ function accessBaseOf(state: UserState, base: UnlockContext, tz: string) {
 function maskedNameOf(
   state: UserState,
   accessBase: ReturnType<typeof accessBaseOf>,
-  base: UnlockContext,
-  tz: string
+  base: UnlockContext
 ) {
   return (pid: string): string => {
     const p = pluginByPid.get(pid);
@@ -66,7 +65,7 @@ function maskedNameOf(
     const st = state.states.get(pid);
     const unlocked = p.unlock === true || st?.unlocked_at != null;
     const visited = st?.visited_at != null;
-    const vis = evalVisibility(p.accessible, { ...base, ...accessBase, unlocked, visited }, tz);
+    const vis = evalVisibility(p.accessible, { ...base, ...accessBase, unlocked, visited });
     if (vis === 'visible') return p.name;
     if (vis === 'ghost') return p.label ?? '???';
     return '???';
@@ -83,13 +82,13 @@ app.get('/problems', async (c) => {
   const tz = tzOf(c.env);
   const base = unlockContextOf(state, now);
   const accessBase = accessBaseOf(state, base, tz);
-  const displayName = maskedNameOf(state, accessBase, base, tz);
+  const displayName = maskedNameOf(state, accessBase, base);
   const list = [];
   for (const p of plugins) {
     const st = state.states.get(p.pid);
     const unlocked = p.unlock === true || st?.unlocked_at != null;
     const visited = st?.visited_at != null;
-    const visibility = evalVisibility(p.accessible, { ...base, ...accessBase, unlocked, visited }, tz);
+    const visibility = evalVisibility(p.accessible, { ...base, ...accessBase, unlocked, visited });
     if (visibility === 'hidden') continue;
     const entry: Record<string, unknown> = {
       pid: p.pid,
@@ -122,7 +121,7 @@ app.post('/problems/:pid/unlock', async (c) => {
   }
   const now = new Date();
   const base = unlockContextOf(state, now);
-  const displayName = maskedNameOf(state, accessBaseOf(state, base, tzOf(c.env)), base, tzOf(c.env));
+  const displayName = maskedNameOf(state, accessBaseOf(state, base, tzOf(c.env)), base);
   const u = evalUnlock(plugin.unlock, base, tzOf(c.env), displayName);
   if (!u.canUnlock) {
     return c.json({ unlocked: false, conditions: u.conditions });
