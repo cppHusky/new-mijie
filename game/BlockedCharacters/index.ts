@@ -40,7 +40,7 @@ export default createPlugin({
 		type:"pass",
 		pid:"Shirt",
 	}],
-	accessible:(ctx)=>ctx.met({type:"pass",pid:"Shirt"})?"visible":"hidden";
+	accessible:(ctx)=>ctx.met({type:"pass",pid:"Shirt"})?"visible":"hidden",
 	description:{
 		before_solve:{
 			mdv:{
