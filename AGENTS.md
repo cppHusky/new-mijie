@@ -411,7 +411,7 @@ type Context = {
 ## 9. 插件系统
 
 - `game/<folder>/index.ts` 默认导出 `createPlugin({...})`；`pnpm gen`（dev/test/deploy 自动触发）运行 `scripts/gen-manifest.mjs` 扫描 `game/`，生成 `src/plugins/manifest.generated.ts`（题目模块显式 import + `.md` 等文本资产内联为字符串表），wrangler 按普通模块打包。**新增/删除/重命名题目后无需手动操作**，但注意 wrangler dev 不会监听 `game/` 新目录，需重启 dev。
-- 配置面（最终）：`pid, name, label?, unlock(必填), accessible?(默认 'suspended'), description{before_solve, after_solve?, admin?}, scores?[{id, desc, points, when?}], checker?/inputs?/server?, hints?, files?, captcha?, record?, showPercent?`。
+- 配置面（最终）：`pid, name, label?, unlock(必填), accessible?(默认 'suspended'), description{before_solve, after_solve?, admin?}, scores?[{id, desc, points, when?}], checker?/inputs?/server?, files?, captcha?, record?, showPercent?`。
 - 构建期校验：unlock 必填；pid 唯一（仅大小写不同告警）；label 缺失告警；`accessible==='lurking'` 搭配非 `true` 的 unlock 告警（无意义组合）；scores.id 题内唯一、desc 必填；unlock 引用的 pid 必须存在于注册表；unlock 条件的形状经 `validateConditionShape` 统一校验。
 - **`UnlockDesc`**：解锁条件的 `desc` 除静态字符串外，可给同步函数 `(ctx: UnlockContext, nameOf) => string`（动态展示进度，如 `` `总分达到 5 分（当前 ${ctx.totalPoints} 分）` ``）；函数抛错时回退自动生成文案（custom 兜底「（描述生成失败）」），不会打挂列表。
 - **desc 可见性掩码**（防泄名）：`evalUnlock` 生成/渲染文案时，引用的 pid 按**当前玩家**对其可见性掩码——visible 显名、ghost 显 `label`（无 label 回退 `???`）、hidden 显 `???`；函数 desc 收到的 `nameOf` 同为掩码版。掩码随进度动态变化（解锁后由 label 变真名）。
@@ -441,7 +441,7 @@ type Context = {
 | GET | `/api/rank` | passed_count desc, total_points desc, last_progress_at asc；并列同名次 |
 | GET | `/api/record` | 提交记录（分页/过滤，沿袭） |
 | GET | `/api/submitted_problems` | 各题提交次数（沿袭） |
-| GET | `/api/notice` · `GET /api/hint/:uid` · `GET /api/file/:pid/*` | 沿袭 |
+| GET | `/api/notice` · `GET /api/file/:pid/*` | 沿袭 |
 
 管理员：game-config（无 gameover 字段）、notice 增删、users（显示 QQ）、user 状态修改（admin/banned/hidden/remark；授 admin 时 hidden 默认置 1，决策 9）、recalculate、cleanRecords、problemList。
 
@@ -456,7 +456,7 @@ puzzle-framework/
 │   ├── env.ts              # Env / Variables 类型
 │   ├── types.ts            # createPlugin / Context / UnlockCondition 等
 │   ├── plugins/
-│   │   ├── registry.ts     # 注册表 + 构建期校验（含 hints/hiddenRecord/server 实例化）
+│   │   ├── registry.ts     # 注册表 + 构建期校验（含 hiddenRecord/server 实例化）
 │   │   ├── server.ts       # PluginServer 事件分发器
 │   │   └── manifest.generated.ts  # 代码生成，请勿手改
 │   ├── domain/             # unlock.ts（条件求值+desc 生成）/ visibility.ts / sort.ts
@@ -495,7 +495,7 @@ pnpm deploy              # gen + 前端构建 + wrangler deploy（首次需先�
 
 - [x] **P0 骨架**：wrangler.jsonc、Hono 入口、D1 migrations、frontend 拷入并跑通
 - [x] **P1 域模型**：types.ts、插件注册表（glob + 校验）、可见性/解锁求值器、单测
-- [x] **P2 流水线**：auth（jose/PBKDF2）、/api/me、problems 列表 + unlock 路由、提交/事件流水线（award 幂等）、rank、record/submitted_problems/notice/hint 只读路由、glot 与 ctx.jwt
+- [x] **P2 流水线**：auth（jose/PBKDF2）、/api/me、problems 列表 + unlock 路由、提交/事件流水线（award 幂等）、rank、record/submitted_problems/notice 只读路由、glot 与 ctx.jwt
 - [x] **P3 前端核心**：Problems.vue、Game.vue 任务清单、Rank.vue、QQ、删除 Graph/Start/Gameover；bus.js 改由 /api/me 水合；弃用 mijie 的客户端 encryptPassword（密码经 TLS 传输、服务端 PBKDF2）
 - [x] **P4 周边**：公告 + RealtimeHub DO（WebSocket 广播）、admin 后台、file 服务（rawAssets + R2 回退）、Rate Limiting + Turnstile 回退
 - [x] **P5 移植验证**：3 道 mijie 题（digitalcircuit 静态 checker+gameStorage、countlightsout server+全亮 award、besiegewithoutassault mdv 交互+60 阶段分+passCount 解锁）
@@ -504,4 +504,4 @@ pnpm deploy              # gen + 前端构建 + wrangler deploy（首次需先�
 
 ## 15. 后备想法（未拍板，暂不实现）
 
-提示系统增强（分层/积分兑换/服务端持久化）、提交策略（次数限制/冷却/答案归一化）、生命周期 hooks（onPass/onUnlock）、多比赛并存、score 条件的 `secret` 逃门、每用户 DO 串行化计分。
+提交策略（次数限制/冷却/答案归一化）、生命周期 hooks（onPass/onUnlock）、多比赛并存、score 条件的 `secret` 逃门、每用户 DO 串行化计分。

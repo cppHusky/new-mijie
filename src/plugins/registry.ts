@@ -14,11 +14,6 @@ export interface RegistryIssue {
   message: string;
 }
 
-export interface HintEntry {
-  content: string;
-  pid: string;
-}
-
 /** 规范化题目内相对路径，拒绝越界（../）引用 */
 export function normalizeRelPath(rel: string): string | null {
   const parts: string[] = [];
@@ -183,15 +178,6 @@ export function validatePlugin(
     }
   }
 
-  if (plugin.hints) {
-    for (const h of plugin.hints) {
-      if (!h?.uid || !h?.content) {
-        error('hints 元素必须包含 uid 与 content');
-        return null;
-      }
-    }
-  }
-
   // 字符串 checker 归一化为全等比较（沿袭 mijie）
   if (typeof plugin.checker === 'string') {
     const expected = plugin.checker;
@@ -268,18 +254,10 @@ function buildRegistry() {
     }
   }
 
-  // hints 全局注册表 / hiddenRecord 集合 / server 实例化
-  const hints = new Map<string, HintEntry>();
+  // hiddenRecord 集合 / server 实例化
   const hiddenRecord = new Set<string>();
   for (const p of byPid.values()) {
     if (p.record === false) hiddenRecord.add(p.pid);
-    for (const h of p.hints ?? []) {
-      if (hints.has(h.uid)) {
-        issues.push({ level: 'error', folder: p.folder, message: `hint uid「${h.uid}」重复` });
-        continue;
-      }
-      hints.set(h.uid, { content: h.content, pid: p.pid });
-    }
     if (p.server) {
       const instance = new PluginServer();
       try {
@@ -295,7 +273,7 @@ function buildRegistry() {
   }
 
   const sorted = Array.from(byPid.values()).sort(compareProblems);
-  return { plugins: sorted, pluginByPid: byPid, issues, hints, hiddenRecord };
+  return { plugins: sorted, pluginByPid: byPid, issues, hiddenRecord };
 }
 
 const registry = buildRegistry();
@@ -303,7 +281,6 @@ const registry = buildRegistry();
 export const plugins: RegisteredPlugin[] = registry.plugins;
 export const pluginByPid: Map<string, RegisteredPlugin> = registry.pluginByPid;
 export const registryIssues: RegistryIssue[] = registry.issues;
-export const hints: Map<string, HintEntry> = registry.hints;
 export const hiddenRecord: Set<string> = registry.hiddenRecord;
 
 for (const issue of registryIssues) {

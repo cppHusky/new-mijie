@@ -16,12 +16,6 @@ const router = VueRouter.createRouter({
             meta: { title: '首页' }
         },
         {
-            path: '/hint',
-            name: 'hint',
-            component: () => import('./pages/Hint.vue'),
-            meta: { title: '题目', game: true }
-        },
-        {
             path: '/gamerule',
             name: 'gamrule',
             component: () => import('./pages/Gamerule.vue'),

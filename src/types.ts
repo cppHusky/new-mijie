@@ -193,7 +193,6 @@ export type Plugin<T extends KeysType> = {
     ? { [K in keyof T]: T[K] extends string ? { name: T[K]; placeholder: string } : never }
     : boolean;
   server?: (app: PluginServerApi) => any;
-  hints?: Array<{ uid: string; content: string }>;
   files?: Array<{ filename: string; info?: string }>;
   /** false 时该题提交永不触发 Turnstile */
   captcha?: boolean;

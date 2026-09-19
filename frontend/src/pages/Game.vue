@@ -61,13 +61,6 @@
                 </li>
             </ul>
         </div>
-        <div v-if="hints.length" class="mx-auto text-center flex flex-col items-center justify-center card container">
-            <h2 class="text-xl my-5 font-bold">当前收集到的线索</h2>
-            <ul class="menu bg-base-200 w-full rounded-box">
-                <li><a class="select-text" :key="hint" v-for="hint in hints"
-                        style="white-space: pre-wrap; word-break: break-all;">{{ hint }}</a></li>
-            </ul>
-        </div>
         <div class="mx-auto text-center flex flex-col items-center justify-center mb-20">
             <div class="card container">
                 <template v-if="gameState == 1">
@@ -177,8 +170,6 @@ const inputs = ref(null)
 const input_textareas = useTemplateRef("input_textareas")
 const solved_description = ref(null)
 let lastSubmit = null
-const hintr = localStorage.getItem('hints')
-const hints = ref([])
 const show_turnstile = ref(false)
 let initProblem = null
 const problemKey = ref(0)
@@ -220,16 +211,6 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('keydown', onKeydown)
 })
-if (hintr) {
-    try {
-        const hintk = JSON.parse(hintr)
-        if (hintk[router.currentRoute.value.params.pid]?.length) {
-            hints.value = hintk[router.currentRoute.value.params.pid]
-        }
-    } catch (err) {
-        console.error(err)
-    }
-}
 let cf_token = null
 
 const state = computed(() => {

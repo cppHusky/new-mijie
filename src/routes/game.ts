@@ -4,7 +4,6 @@ import type { Env, Variables } from '../env';
 import {
   plugins,
   pluginByPid,
-  hints,
   hiddenRecord,
   type RegisteredPlugin,
 } from '../plugins/registry';
@@ -488,24 +487,6 @@ app.get('/notice', async (c) => {
     'SELECT id, content, author, created_at FROM notices ORDER BY created_at DESC'
   ).all();
   return c.json({ notices: rows.results ?? [] });
-});
-
-// —— 提示 ——
-
-app.get('/hint/:uid', async (c) => {
-  const err = await gameWindowError(c.env, c.get('admin') >= 1);
-  if (err) return c.text(err, 400);
-  const hint = hints.get(c.req.param('uid'));
-  if (!hint) return c.text('Hint not found', 404);
-  const plugin = pluginByPid.get(hint.pid);
-  if (!plugin) return c.text('Problem not found', 404);
-  if (c.get('admin') < 1 && plugin.unlock !== true) {
-    const state = await loadUserState(c.env.DB, c.get('username'));
-    if (state.states.get(hint.pid)?.unlocked_at == null) {
-      return c.text(`Problem "${hint.pid}" not found`, 404);
-    }
-  }
-  return c.json({ pid: hint.pid, content: hint.content });
 });
 
 // —— 内部工具 ——
