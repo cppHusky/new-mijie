@@ -6,6 +6,7 @@
 import {inject,ref} from "vue";
 const ans=ref("ans");
 const api=inject("admin_api");
+await api("init_if_undefined");
 async function get(){
 	ans.value=await api("get");
 }

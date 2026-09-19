@@ -66,6 +66,14 @@ export default createPlugin({
 		return false;
 	},
 	server:(app)=>{
+		app.adminOn("init_if_undefined",(_,ctx)=>{
+			let target=ctx.gameStorage.get<number>("GuessNumber.target");
+			if(!target){
+				target=1+Math.floor(98.9999*Math.random());
+				ctx.gameStorage.set("GuessNumber.target",target);
+				ctx.gameStorage.set("GuessNumber.time",0);
+			}
+		});
 		app.adminOn("get",(_,ctx)=>{
 			return ctx.gameStorage.get<number>("GuessNumber.target");
 		});
