@@ -101,6 +101,8 @@ export type ScoreCondition = {
    * 省略时只能由题目代码通过 ctx.award(id) 显式触发（用于路线相关得分）。
    */
   when?: (ans: any, ctx: Context, info: { passed: boolean }) => boolean | Promise<boolean>;
+  /** 已入账条件再次达成时是否发通知（不重复计分），默认 false（静默） */
+  renotify?: boolean;
 };
 
 // —— 运行时上下文 ——

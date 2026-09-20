@@ -499,7 +499,7 @@ async function awardedIds(db: D1Database, username: string, pid: string): Promis
   return new Set((rows.results ?? []).map((r) => r.score_id));
 }
 
-/** 声明式糖：每次提交/事件后兜底评估 scores[].when；已入账条件再次达成时登记 reAchieved（不重复计分） */
+/** 声明式糖：每次提交/事件后兜底评估 scores[].when；已入账条件再次达成且 renotify 为 true 时登记 reAchieved（不重复计分） */
 async function evalDeclarativeScores(
   plugin: RegisteredPlugin,
   ans: unknown,
@@ -515,7 +515,7 @@ async function evalDeclarativeScores(
     try {
       if (await s.when(ans, ctx, { passed })) {
         if (alreadyAwarded.has(s.id)) {
-          if (!reAchieved.some((r) => r.id === s.id)) {
+          if (s.renotify === true && !reAchieved.some((r) => r.id === s.id)) {
             reAchieved.push({ id: s.id, desc: s.desc, points: s.points });
           }
         } else {

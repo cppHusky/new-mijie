@@ -45,6 +45,7 @@ export default createPlugin({
 			desc:"不审题",
 			points:-5,
 			when:async(ans,_)=>parseFloat(ans)==915,
+			renotify:true,
 	}],
 	captcha:true,
 	record:true,

@@ -16,6 +16,7 @@ export default createPlugin({
 			desc:"You are ROBOT?",
 			points:5,
 			when:async(ans,_)=>ans.trim()==="0.30000000000000004",
+			renotify:true,
 		},
 	],
 	inputs:true,

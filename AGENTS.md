@@ -411,7 +411,8 @@ type Context = {
 ## 9. 插件系统
 
 - `game/<folder>/index.ts` 默认导出 `createPlugin({...})`；`pnpm gen`（dev/test/deploy 自动触发）运行 `scripts/gen-manifest.mjs` 扫描 `game/`，生成 `src/plugins/manifest.generated.ts`（题目模块显式 import + `.md` 等文本资产内联为字符串表），wrangler 按普通模块打包。**新增/删除/重命名题目后无需手动操作**，但注意 wrangler dev 不会监听 `game/` 新目录，需重启 dev。
-- 配置面（最终）：`pid, name, label?, unlock(必填), accessible?(默认 'suspended'), description{before_solve, after_solve?, admin?}, scores?[{id, desc, points, when?}], checker?/inputs?/server?, files?, captcha?, record?, showPercent?`。
+- 配置面（最终）：`pid, name, label?, unlock(必填), accessible?(默认 'suspended'), description{before_solve, after_solve?, admin?}, scores?[{id, desc, points, when?, renotify?}], checker?/inputs?/server?, files?, captcha?, record?, showPercent?`。
+- **得分再次达成通知**：条件已入账后再次达成时默认静默（不重复计分）；仅当该条件 `renotify: true` 时，接口返回 `reAchieved`，前端弹「再次达成【…】」。`createAward` 与 `evalDeclarativeScores` 两处均以 `renotify === true` 为守卫。
 - 构建期校验：unlock 必填；pid 唯一（仅大小写不同告警）；label 缺失告警；`accessible==='lurking'` 搭配非 `true` 的 unlock 告警（无意义组合）；scores.id 题内唯一、desc 必填；unlock 引用的 pid 必须存在于注册表；unlock 条件的形状经 `validateConditionShape` 统一校验。
 - **`UnlockDesc`**：解锁条件的 `desc` 除静态字符串外，可给同步函数 `(ctx: UnlockContext, nameOf) => string`（动态展示进度，如 `` `总分达到 5 分（当前 ${ctx.totalPoints} 分）` ``）；函数抛错时回退自动生成文案（custom 兜底「（描述生成失败）」），不会打挂列表。
 - **desc 可见性掩码**（防泄名）：`evalUnlock` 生成/渲染文案时，引用的 pid 按**当前玩家**对其可见性掩码——visible 显名、ghost 显 `label`（无 label 回退 `???`）、hidden 显 `???`；函数 desc 收到的 `nameOf` 同为掩码版。掩码随进度动态变化（解锁后由 label 变真名）。

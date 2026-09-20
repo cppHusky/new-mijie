@@ -22,6 +22,7 @@ export default createPlugin({
 			desc:"不审题",
 			points:-5,
 			when:async(ans,_)=>ans.x.trim()==="长安十二时辰",
+			renotify:true,
 		},
 	],
 	inputs:[
