@@ -1,14 +1,14 @@
 import createPlugin from "../../src/types.ts";
-const content=`
-How much is the shirt in pounds?
-`;
 export default createPlugin({
 	pid:"Shirt",
 	name:"Shirt",
 	label:"05",
 	description:{
 		before_solve:{
-			content,
+			content:"How much is the shirt in pounds?",
+		},
+		after_solve:{
+			content:"Yes, it's nine fifteen.",
 		},
 	},
 	unlock:[
