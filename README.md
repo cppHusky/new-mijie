@@ -182,7 +182,7 @@ export default createPlugin({
 
 在可见性为 `ghost` 的情况下，玩家不能在题目列表中看到题目的 `name`。因此，为了区分无名的幽灵题目，建议为不同的题目设置不同的 `label`。
 
-`label` 的格式不限，但习惯上使用 `01` `02` `03` 这样表示数字的字符串。这是因为数字比较易于记忆和表达；另外，题目列表的题目也是根据 `label` 来进行排序的，数字越小会排得越靠前。
+`label` 的格式不限，但习惯上使用 `01` `02` `03` 这样表示数字的字符串。这是因为数字比较易于记忆和表达；另外，题目列表的题目也是根据 `label` 来进行排序的，自然序会排得越靠前。
 
 一例：[CountLightsOut](./game/CountLightsOut/index.ts)
 
@@ -283,7 +283,7 @@ export default createPlugin({
 如果你不希望使用默认生成的描述，那么你也可以自行编写 `desc`。你可以直接使用 `string` 类型的固定内容，或者使用返回 `string` 类型的函数 `(ctx: UnlockContext, nameOf) => string`。
 
 `UnlockContext` 包含一些在解锁条件中需要用到的背景信息，诸如：
-- 已解锁的题目集合 `passed: readonlySet<string>`；
+- 已解锁的题目集合 `passed: ReadonlySet<string>`；
 - 每道题目的分数 `problemScores: ReadonlyMap<string, number>`；
 - 玩家的总分 `totalPoints: number`；
 - 玩家通过题目的数量 `passedCount: number`；
@@ -330,7 +330,7 @@ export default createPlugin({
 - `{ content: string; }` 使用一个固定的字符串，支持基本的 Markdown 语法。
 - `{ md: string; }` 使用一个 Markdown 文件的相对路径。
 - `{ mdv: MdvRef; }` 使用一个 [Markdown-Vue.js](https://github.com/youXam/mdvc) 组件，其中，`MdvRef` 的定义包含：
-    - `main: string` 是主 Markdown 文件的想对路径；
+    - `main: string` 是主 Markdown 文件的相对路径；
     - `include?: string[]` 是允许前端引入的文件；
     - `exclude?: string[]` 是在 `include` 之中，不允许前端引入的文件。
 
@@ -404,7 +404,7 @@ export default createPlugin({
 
 你需要输入完整的内容才可以通关。
 
-<!--这里的 content 起初是空字符串，而后经过 api("refresh",...) 解析，变为相应的返回值->
+<!--这里的 content 起初是空字符串，而后经过 api("refresh",...) 解析，变为相应的返回值-->
 <blockquote>
 {{ content }}
 </blockquote>
@@ -536,7 +536,7 @@ async function get(){
 
 `inputs` 表示本题接受玩家文本输入的情况，而 `checker` 则是输入检查器。很多题目只需要玩家做很简单的文本输入，此时用 `inputs` 和 `checker` 就可以以通过少量代码实现题目逻辑，方便简洁。
 
-如果一道题目不需要玩家进行文本输入，此时 `input` 的值应为 `false`，且不可以设置 `checker`。
+如果一道题目不需要玩家进行文本输入，此时 `inputs` 的值应为 `false`，且不可以设置 `checker`。
 
 一例：[QQGroup](./game/QQGroup/index.ts)
 
@@ -544,7 +544,7 @@ async function get(){
     inputs:false,
 ```
 
-如果一道题目只需要玩家进行简单输入，此时 `input` 的值须设为 `true`，而 `checker` 需设置为 `(ans: string, ctx: Context) => Promise<boolean>`。这个 boolean 返回值就用来判定玩家本次的回答能否通关。
+如果一道题目只需要玩家进行简单输入，此时 `inputs` 的值须设为 `true`，而 `checker` 需设置为 `(ans: string, ctx: Context) => Promise<boolean>`。这个 boolean 返回值就用来判定玩家本次的回答能否通关。
 
 一例：[Calculator](./game/Calculator/index.ts)
 
@@ -614,7 +614,7 @@ async function get(){
     },
 ```
 
-如果一道题目需要玩家进行多个输入，或者需要在输入框中加占位符，那么 `input` 的格式应为 `{ name: string; placeholder: string }[]`，而 `checker` 的 `ans` 类型需与 `input` 的实际格式对应。
+如果一道题目需要玩家进行多个输入，或者需要在输入框中加占位符，那么 `inputs` 的格式应为 `{ name: string; placeholder: string }[]`，而 `checker` 的 `ans` 类型需与 `inputs` 的实际格式对应。
 
 一例：[ISBN](./game/ISBN/index.ts)
 
@@ -636,7 +636,7 @@ async function get(){
 - `when?: (ans: any, ctx: Context, info: { passed: boolean }) => boolean | Promise<boolean>` 得分条件的逻辑实现；
 - `renotify?: boolean` 再次达到本得分条件时，是否为玩家发送通知，默认为 `false`。
 
-得分条件的逻辑可以在 `when` 中直报写明，前提是 `ans`、`ctx` 或 `info.passed` 足以表达这个逻辑。
+得分条件的逻辑可以在 `when` 中直接写明，前提是 `ans`、`ctx` 或 `info.passed` 足以表达这个逻辑。
 
 一例：[Dialling](./game/Dialling/index.ts)
 
@@ -710,7 +710,7 @@ async function get(){
 
 ### `captcha`
 
-它控制本题是否启用验证码。如果你[配置了 Turnstile](#环境密钥配置)，又在题目中启用了 `captcha`，那么玩家在输入过于频繁时，将被要求进行人机验证。
+它是一个 `boolean` 值，控制本题是否启用验证码。如果你[配置了 Turnstile](#环境密钥配置)，又不在题目中禁用 `captcha`，那么玩家在输入过于频繁时，将被要求进行人机验证。
 
 一例：[GuessNumber](./game/GuessNumber/index.ts)
 
@@ -720,6 +720,6 @@ async function get(){
 
 ### `record` 和 `showPercent`
 
-`record: boolean` 控制玩家能否查看自己的提交记录，默认打开。
+`record: boolean` 控制玩家能否查看自己的提交记录，默认打开。而管理员不受限制，总是可以看到玩家的提交记录。
 
-`showPercetn: boolean` 控制玩家能否看到本题的通关率，默认打开。
+`showPercent: boolean` 控制玩家能否看到本题的通关率，默认打开。
