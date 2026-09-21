@@ -63,6 +63,10 @@ publicRoutes.post('/login', async (c) => {
   if (user.banned) {
     return c.text('您已被封禁', 403);
   }
+  // 记录最近登录时间，供后台清理长期未登录的账号
+  await c.env.DB.prepare('UPDATE users SET last_login_at = ? WHERE username = ?')
+    .bind(Date.now(), user.username)
+    .run();
   const jwt = await signToken(c.env.JWT_SECRET, { sub: user.username, admin: user.admin });
   return c.json({ message: '登录成功', token: jwt, username: user.username });
 });
@@ -147,37 +151,19 @@ authedRoutes.post('/change-qq', async (c) => {
   return c.json({ message: 'QQ 号修改成功' });
 });
 
-// —— 删除账号（仅回顾模式）：凭密码硬删除本账号全部游戏数据，不可恢复 ——
+// —— 重置进度（仅回顾模式）：清空本人的全部游戏数据，保留账号本体，不可恢复 ——
 
-authedRoutes.delete('/account', async (c) => {
+authedRoutes.post('/reset-progress', async (c) => {
   if (!isReviewMode(c.env)) return c.text('Not Found', 404);
-  const body = await c.req.json().catch(() => ({}) as any);
-  const { password } = body;
-  if (typeof password !== 'string' || !password) {
-    return c.text('请输入密码', 400);
-  }
   const username = c.get('username');
-  const user = await c.env.DB.prepare(
-    'SELECT password_hash, salt, admin FROM users WHERE username = ?'
-  )
-    .bind(username)
-    .first<{ password_hash: string; salt: string; admin: number }>();
-  if (!user || !(await verifyPassword(password, user.salt, user.password_hash))) {
-    return c.text('密码错误', 401);
-  }
-  if (user.admin >= 1) {
-    const admins = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM users WHERE admin >= 1')
-      .first<{ n: number }>();
-    if ((admins?.n ?? 0) <= 1) {
-      return c.text('不能删除最后一名管理员', 400);
-    }
-  }
   await c.env.DB.batch([
     c.env.DB.prepare('DELETE FROM records WHERE username = ?').bind(username),
     c.env.DB.prepare('DELETE FROM score_events WHERE username = ?').bind(username),
     c.env.DB.prepare('DELETE FROM problem_state WHERE username = ?').bind(username),
     c.env.DB.prepare('DELETE FROM game_storage WHERE username = ?').bind(username),
-    c.env.DB.prepare('DELETE FROM users WHERE username = ?').bind(username),
+    c.env.DB.prepare(
+      'UPDATE users SET total_points = 0, passed_count = 0, last_progress_at = NULL WHERE username = ?'
+    ).bind(username),
   ]);
-  return c.json({ message: '账号已删除' });
+  return c.json({ message: '进度已重置' });
 });

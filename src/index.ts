@@ -5,6 +5,7 @@ import gameRoutes from './routes/game';
 import adminRoutes from './routes/admin';
 import fileRoutes from './routes/file';
 import { requireAuth } from './lib/auth';
+import { cleanupInactiveUsers } from './lib/cleanup';
 import { RealtimeHub } from './durable/realtime';
 
 export { RealtimeHub };
@@ -32,4 +33,10 @@ app.onError((err, c) => {
   return c.text('Internal Server Error', 500);
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  // Cron Trigger：清理长期（180 天）未登录的账号，管理员豁免
+  scheduled: (_event: ScheduledController, env: Env, ctx: ExecutionContext) => {
+    ctx.waitUntil(cleanupInactiveUsers(env));
+  },
+};

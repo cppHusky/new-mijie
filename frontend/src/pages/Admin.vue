@@ -4,7 +4,7 @@
         <div class="w-full flex flex-col mx-auto">
             <div v-if="reviewMode" class="alert alert-warning mb-5">
                 <font-awesome-icon :icon="['fas', 'triangle-exclamation']" />
-                回顾模式已启用：开始/结束时间不会生效，排行榜与通过率已关闭，玩家可删除自己的账号。
+                回顾模式已启用：开始/结束时间不会生效，排行榜与通过率已关闭，玩家可重置自己的游戏进度。
             </div>
             <label class="label">
                 <span class="label-text">开始时间</span>

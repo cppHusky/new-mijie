@@ -46,15 +46,13 @@
         </div>
         <div v-if="reviewMode"
             class="form-control w-full max-w-xs flex flex-col m-auto mt-10 border border-error/60 rounded-box p-4">
-            <h2 class="text-lg font-bold text-error mb-2">删除账号</h2>
+            <h2 class="text-lg font-bold text-error mb-2">重置进度</h2>
             <p class="label-text">
-                删除账号会清空你的全部游戏数据，且不可恢复。
+                重置进度会清空你的全部游戏数据（解锁、通关、得分、提交记录等），账号将会保留，且不可恢复。
             </p>
-            <input type="password" class="input input-bordered w-full max-w-xs mb-3" autocomplete="current-password"
-                placeholder="输入密码确认" v-model="deletePassword" />
-            <button class="btn btn-error" :disabled="!deletePassword.length || deleting" @click="deleteAccount">
-                <span class="loading loading-dots loading-xs" v-if="deleting"></span>
-                删除账号
+            <button class="btn btn-error mt-3" :disabled="resetting" @click="resetProgress">
+                <span class="loading loading-dots loading-xs" v-if="resetting"></span>
+                重置进度
             </button>
         </div>
     </TitleCard>
@@ -63,7 +61,7 @@
 <script setup>
 import TitleCard from '@/components/TitleCard.vue';
 import { ref, watch, computed } from 'vue'
-import { api, apiDelete } from '@/tools/api'
+import { api } from '@/tools/api'
 import { useRouter } from 'vue-router'
 import { user } from '@/tools/bus'
 import { reviewMode, loadMode } from '@/tools/mode'
@@ -74,8 +72,7 @@ const oldPassword = ref('')
 const password = ref('')
 const password2 = ref('')
 const error = ref('')
-const deletePassword = ref('')
-const deleting = ref(false)
+const resetting = ref(false)
 const qqValid = computed(() => /^[1-9]\d{4,10}$/.test(qq.value))
 loadMode()
 if (!user.login.value) {
@@ -115,19 +112,18 @@ async function changePassword() {
         console.log(err)
     }
 }
-async function deleteAccount() {
-    if (!window.confirm('删除账号将清空你的全部游戏数据且不可恢复，确定继续吗？')) return
-    deleting.value = true
+async function resetProgress() {
+    if (!window.confirm('重置后将清空你的全部游戏数据，账号保留，且不可恢复，确定继续吗？')) return
+    resetting.value = true
     try {
-        await apiDelete('/api/account', { password: deletePassword.value })
-        localStorage.clear()
+        await api('/api/reset-progress', {})
         user.update()
-        notificationManager.add({ message: '账号已删除，全部数据已清空', type: 'success' })
-        router.push('/')
+        notificationManager.add({ message: '进度已重置', type: 'success' })
+        router.push('/problems')
     } catch (err) {
         console.log(err)
     } finally {
-        deleting.value = false
+        resetting.value = false
     }
 }
 </script>

@@ -44,6 +44,10 @@
 			}
 		}
 	],
+	"triggers": {
+		// 每日 UTC 04:00（北京时间 12:00）清理 180 天未登录的账号
+		"crons": ["0 4 * * *"]
+	},
 	"vars": {
 		"TIMEZONE": "Asia/Shanghai",
 		// 为 `true` 时启用回顾模式
