@@ -50,9 +50,8 @@ export default createPlugin({
 	captcha:true,
 	record:true,
 	checker:async(ans,_)=>parseFloat(ans)===9.15,
-	files:[
-		{
-			filename:"audio.mp3",
-		},
-	],
+	files:[{
+		filename:"audio.mp3",
+		info:"下载听力音频",
+	}],
 });
