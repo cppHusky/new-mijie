@@ -52,7 +52,7 @@ export default createPlugin({
 	scores:[{
 		id:"BlockedCharacters.incomplete",
 		desc:"在未得到完整内容时，就通过了本关",
-		when:(ans,ctx,info)=>{
+		when:(_,ctx,info)=>{
 			const water=ctx.gameProcess.passed.has("Water");
 			const fire=ctx.gameProcess.passed.has("Fire");
 			const wind=ctx.gameProcess.passed.has("Wind");
