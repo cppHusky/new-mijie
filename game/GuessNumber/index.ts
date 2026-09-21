@@ -1,4 +1,8 @@
 import createPlugin from '../../src/types';
+const resetTarget=(ctx)=>{
+	ctx.gameStorage.set("GuessNumber.time",0);
+	ctx.gameStorage.set("GuessNumber.target",1+Math.floor(98.9999*Math.random()));
+};
 export default createPlugin({
 	pid: 'GuessNumber',
 	name: 'GuessNumber',
@@ -7,7 +11,10 @@ export default createPlugin({
 	accessible: 'always',
 	description: {
 		before_solve: {
-			md:"main.md",
+			mdv:{
+				main:"main.md",
+				include:["main.md"],
+			},
 		},
 		admin:{
 			main:"admin.vue",
@@ -20,12 +27,8 @@ export default createPlugin({
 		{ id: 'GuessNumber.inonce', desc: '只用 1 次就通过本关', points: 5 },
 	],
 	checker:async(ans,ctx)=>{
-		let inputTime=ctx.gameStorage.get<number>("GuessNumber.time")??0;
+		let inputTime=ctx.gameStorage.get<number>("GuessNumber.time");
 		let target=ctx.gameStorage.get<number>("GuessNumber.target");
-		if(!target){
-			target=1+Math.floor(98.9999*Math.random());
-			ctx.gameStorage.set("GuessNumber.target",target);
-		}
 		const input=parseFloat(ans);
 		inputTime++;
 		ctx.gameStorage.set("GuessNumber.time",inputTime);
@@ -40,32 +43,27 @@ export default createPlugin({
 					}
 				}
 			}
-			ctx.gameStorage.set("GuessNumber.time",0);
-			ctx.gameStorage.set("GuessNumber.target",1+Math.floor(98.9999*Math.random()));
+			resetTarget(ctx);
 			ctx.msg(`题目已重置`);
 			return true;
 		}
-		if(input <target){
+		else if(input <target){
 			ctx.msg(`小了（次数：${inputTime}/7）`);
 		}
 		else if(input>target){
 			ctx.msg(`大了（次数：${inputTime}/7）`);
 		}
 		if(inputTime>=7){
-			ctx.gameStorage.set("GuessNumber.time",0);
-			ctx.gameStorage.set("GuessNumber.target",1+Math.floor(98.9999*Math.random()));
+			resetTarget(ctx);
 			ctx.msg(`输入 7 次还未猜出，本轮作废。题目已重置`);
 		}
 		return false;
 	},
 	server:(app)=>{
-		app.adminOn("init_if_undefined",(_,ctx)=>{
+		app.on("init_if_not_defined",(_,ctx)=>{
 			let target=ctx.gameStorage.get<number>("GuessNumber.target");
-			if(!target){
-				target=1+Math.floor(98.9999*Math.random());
-				ctx.gameStorage.set("GuessNumber.target",target);
-				ctx.gameStorage.set("GuessNumber.time",0);
-			}
+			if(!target)
+				resetTarget(ctx);
 		});
 		app.adminOn("get",(_,ctx)=>{
 			return ctx.gameStorage.get<number>("GuessNumber.target");
