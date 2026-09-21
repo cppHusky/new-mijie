@@ -1,4 +1,8 @@
+# 必填，自已 openssl rand 一个出来就行
 JWT_SECRET=
+## 如果是本地开发，不要设置 TURNSTILE
+## 如果是正式布署，不设置 TURNSTILE 将不启用验证码
 # TURNSTILE_KEY=
 # TURNSTILE_SECRET=
+## 如果需要玩家输入代码并执行，请填写，否则不填
 # GLOT_IO_API_KEY=
